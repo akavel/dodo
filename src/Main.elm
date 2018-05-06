@@ -1,20 +1,21 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, img, button)
-import Html.Attributes exposing (src)
-import Html.Events exposing (onClick)
+import Html exposing (Html, text, div, h1, img, button, input)
+import Html.Attributes exposing (src, placeholder)
+import Html.Events exposing (onInput)
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    { count : Int }
+    { text : String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { count = 0 }, Cmd.none )
+    ( { text = "" }, Cmd.none )
 
 
 
@@ -22,17 +23,14 @@ init =
 
 
 type Msg =
-    Increment | Decrement
-    -- = NoOp
+    Change String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     let newModel = case msg of
-        Increment ->
-            { model | count = model.count + 1 }
-        Decrement ->
-            { model | count = model.count - 1 }
+        Change newText ->
+            { model | text = newText }
     in ( newModel, Cmd.none )
 
 
@@ -43,11 +41,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
-        , button [ onClick Decrement ] [ text "-" ]
-        , div [] [ text (toString model.count) ]
-        , button [ onClick Increment ] [ text "+" ]
+        [ input [ placeholder "Your text", onInput Change ] []
+        , div [] [ text (String.reverse model.text) ]
         ]
 
 
