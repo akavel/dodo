@@ -1,8 +1,13 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, img, button, input)
-import Html.Attributes exposing (src, placeholder)
-import Html.Events exposing (onInput)
+import Html exposing (Html, div, text, p)
+-- debois/elm-mdl - Material Design Lite (MDL)
+import Material
+import Material.Scheme
+import Material.Options as Options
+import Material.Textfield as Textfield
+import Material.Typography as Typo
+import Material.Helpers exposing (pure)
 
 
 ---- MODEL ----
@@ -10,12 +15,19 @@ import Html.Events exposing (onInput)
 
 type alias Model =
     { text : String
+    , mdl : Material.Model  -- MDL boilerplate
+    }
+
+
+model : Model
+model =
+    { text = ""
+    , mdl = Material.model  -- MDL boilerplate
     }
 
 
 init : ( Model, Cmd Msg )
-init =
-    ( { text = "" }, Cmd.none )
+init = ( model, Cmd.none )
 
 
 type alias DodoModel =
@@ -32,16 +44,18 @@ type alias Task =
 ---- UPDATE ----
 
 
-type Msg =
-    Change String
+type Msg
+    = Change String
+    | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let newModel = case msg of
+    case msg of
         Change newText ->
-            { model | text = newText }
-    in ( newModel, Cmd.none )
+            pure { model | text = newText }
+        Mdl msg_ ->
+            Material.update Mdl msg_ model
 
 {-
 We need to be able to:
@@ -67,13 +81,24 @@ type DodoMsg
 
 ---- VIEW ----
 
+type alias Mdl = Material.Model
 
 view : Model -> Html Msg
 view model =
     div []
-        [ input [ placeholder "Your text", onInput Change ] []
-        , div [] [ text (String.reverse model.text) ]
+        [ Textfield.render
+            Mdl [0] model.mdl  -- MDL boilerplate
+            [ Textfield.label "Your text"
+            , Textfield.floatingLabel
+            , Options.onInput Change
+            ] []
+        , Options.styled p
+            [ Typo.headline ]
+            [ text (String.reverse model.text) ]
+        -- [ input [ placeholder "Your text", onInput Change ] []
+        -- , div [] [ text (String.reverse model.text) ]
         ]
+    |> Material.Scheme.top
 
 
 
