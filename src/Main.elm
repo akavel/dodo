@@ -1,6 +1,7 @@
 module Main exposing (..)
 
-import Html exposing (Html, div, text, p)
+import Html exposing (Html, div, text, p, header, footer, main_)
+import Html.Attributes exposing (class)
 -- import Array exposing (Array)
 -- debois/elm-mdl - Material Design Lite (MDL)
 import Material
@@ -10,8 +11,6 @@ import Material.Color as Color
 import Material.Textfield as Textfield
 import Material.Typography as Typo
 import Material.List as Lists
-import Material.Footer as Footer
-import Material.Layout as Layout
 import Material.Helpers exposing (pure)
 
 
@@ -46,7 +45,7 @@ model =
 
 
 init : ( Model, Cmd Msg )
-init = ( model, Layout.sub0 Mdl )
+init = ( model, Cmd.none )
 
 
 ---- UPDATE ----
@@ -127,36 +126,22 @@ viewMain model =
             [ text (String.reverse model.text) ]
         , Lists.ul []
             (List.indexedMap viewTask model.checklist.tasks)
-        , Footer.mini []
-            { left =
-                Footer.left []
-                  [ Footer.logo [] [ Footer.html <| text "Mini Footer Example" ]
-                  , Footer.links []
-                      [ Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 1"]
-                      , Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 2"]
-                      , Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 3"]
-                      ]
-                  ]
-
-            , right =
-                Footer.right []
-                  [ Footer.logo [] [ Footer.html <| text "Mini Footer Right Section" ]
-                  , Footer.socialButton [Options.css "margin-right" "6px"] []
-                  , Footer.socialButton [Options.css "margin-right" "6px"] []
-                  , Footer.socialButton [Options.css "margin-right" "0px"] []
-                  ]
-            }
         ]
 
 view : Model -> Html Msg
 view model =
-    Layout.render Mdl model.mdl
-        [ Layout.fixedHeader ]
-        { header = []
-        , drawer = []
-        , tabs = ([], [])
-        , main = [ viewMain model ]
-        }
+    div [ class "site mdl-layout mdl-js-layout" ]
+        [ header [ class "mdl-layout__header mdl-layout__header--waterfall"]
+            [ div [ class "mdl-layout__header-row" ]
+                [ text "hello header" ]
+            ]
+        , main_ [ class "mdl-layout__content" ]
+            [ text "hello content" ]
+            -- [ viewMain model ]
+        , footer [ class "mdl-mini-footer" ]
+            [ text "hello footer" ]
+        , div [ class "mdl-layout__obfuscator" ] []
+        ]
     |> Material.Scheme.top
 
 
@@ -170,9 +155,5 @@ main =
         { view = view
         , init = init
         , update = update
-        -- TODO(akavel): send PR to elm-mdl with fix to doc with below solution
-        -- , subscriptions = \model -> Layout.subs Mdl model
-        -- , subscriptions = Layout.subs Mdl model
-        -- , subscriptions = Layout.subs Mdl
-        , subscriptions = .mdl >> Layout.subs Mdl
+        , subscriptions = always Sub.none
         }
