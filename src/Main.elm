@@ -10,6 +10,8 @@ import Material.Color as Color
 import Material.Textfield as Textfield
 import Material.Typography as Typo
 import Material.List as Lists
+import Material.Footer as Footer
+import Material.Layout as Layout
 import Material.Helpers exposing (pure)
 
 
@@ -44,7 +46,7 @@ model =
 
 
 init : ( Model, Cmd Msg )
-init = ( model, Cmd.none )
+init = ( model, Layout.sub0 Mdl )
 
 
 ---- UPDATE ----
@@ -111,8 +113,8 @@ viewTask idx submodel =
             [ text (submodel.text) ]
         ]
 
-view : Model -> Html Msg
-view model =
+viewMain : Model -> Html Msg
+viewMain model =
     div []
         [ Textfield.render
             Mdl [0] model.mdl  -- MDL boilerplate
@@ -125,7 +127,36 @@ view model =
             [ text (String.reverse model.text) ]
         , Lists.ul []
             (List.indexedMap viewTask model.checklist.tasks)
+        , Footer.mini []
+            { left =
+                Footer.left []
+                  [ Footer.logo [] [ Footer.html <| text "Mini Footer Example" ]
+                  , Footer.links []
+                      [ Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 1"]
+                      , Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 2"]
+                      , Footer.linkItem [ Footer.href "#footers" ] [ Footer.html <| text "Link 3"]
+                      ]
+                  ]
+
+            , right =
+                Footer.right []
+                  [ Footer.logo [] [ Footer.html <| text "Mini Footer Right Section" ]
+                  , Footer.socialButton [Options.css "margin-right" "6px"] []
+                  , Footer.socialButton [Options.css "margin-right" "6px"] []
+                  , Footer.socialButton [Options.css "margin-right" "0px"] []
+                  ]
+            }
         ]
+
+view : Model -> Html Msg
+view model =
+    Layout.render Mdl model.mdl
+        [ Layout.fixedHeader ]
+        { header = []
+        , drawer = []
+        , tabs = ([], [])
+        , main = [ viewMain model ]
+        }
     |> Material.Scheme.top
 
 
@@ -139,5 +170,9 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        -- TODO(akavel): send PR to elm-mdl with fix to doc with below solution
+        -- , subscriptions = \model -> Layout.subs Mdl model
+        -- , subscriptions = Layout.subs Mdl model
+        -- , subscriptions = Layout.subs Mdl
+        , subscriptions = .mdl >> Layout.subs Mdl
         }
