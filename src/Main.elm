@@ -130,19 +130,18 @@ viewMain model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "site mdl-layout mdl-js-layout" ]
-        [ header [ class "mdl-layout__header mdl-layout__header--waterfall"]
-            [ div [ class "mdl-layout__header-row" ]
-                [ text "hello header" ]
+    div [ class "app-layout" ]
+        [ header [ class "app-header" ]
+            [ text "hello header" ]
+        , main_ [ class "app-content" ]
+            [ text "hello content"
+            , Lists.ul []
+                (List.indexedMap viewTask model.checklist.tasks)
             ]
-        , main_ [ class "mdl-layout__content" ]
-            [ text "hello content" ]
-            -- [ viewMain model ]
-        , footer [ class "mdl-mini-footer" ]
-            [ text "hello footer" ]
-        , div [ class "mdl-layout__obfuscator" ] []
+        , footer [ class "app-footer" ]
+            [ text "hello footer rather long to see it" ]
         ]
-    -- |> Material.Scheme.top
+    |> Material.Scheme.top
 
 
 
