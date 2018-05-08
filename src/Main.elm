@@ -142,7 +142,7 @@ view model =
             [ text "hello footer" ]
         , div [ class "mdl-layout__obfuscator" ] []
         ]
-    |> Material.Scheme.top
+    -- |> Material.Scheme.top
 
 
 
