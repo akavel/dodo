@@ -9,6 +9,8 @@ import Material.Scheme
 import Material.Options as Options
 import Material.Color as Color
 import Material.Textfield as Textfield
+import Material.Button as Button
+import Material.Icon as Icon
 import Material.Typography as Typo
 import Material.List as Lists
 import Material.Helpers exposing (pure)
@@ -134,12 +136,26 @@ view model =
         [ header [ class "app-header" ]
             [ text "hello header" ]
         , main_ [ class "app-content" ]
-            [ text "hello content"
-            , Lists.ul []
+            -- [ text "hello content"
+            [ Lists.ul []
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
         , footer [ class "app-footer" ]
-            [ text "hello footer rather long to see it" ]
+            [ Textfield.render
+                Mdl [0] model.mdl  -- MDL boilerplate
+                [ Textfield.label "New task"
+                , Textfield.floatingLabel
+                , Textfield.text_
+                ]
+                []
+            , Button.render
+                Mdl [1] model.mdl  -- MDL boilerplate
+                [ Button.fab
+                , Button.colored
+                -- , Options.onClick AddTask
+                ]
+                [ Icon.i "add" ]
+            ]
         ]
     |> Material.Scheme.top
 
