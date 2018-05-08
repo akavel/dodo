@@ -1,8 +1,9 @@
 {
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
-    "repository": "https://github.com/user/project.git",
-    "license": "BSD3",
+    "summary": "TODO-like mobile app, with positive reinforcement calendar (planned)",
+    "repository": "https://github.com/akavel/dodo.git",
+    "license": "GPL-3.0",
+    "homepage": "https://akavel.github.io/dodo",
     "source-directories": [
         "src"
     ],
