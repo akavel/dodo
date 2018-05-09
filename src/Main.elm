@@ -14,6 +14,7 @@ import Material.Icon as Icon
 import Material.Typography as Typo
 import Material.List as Lists
 import Material.Helpers exposing (pure)
+import Focus exposing (..)
 
 
 ---- MODEL ----
@@ -23,12 +24,19 @@ type alias Model =
     { text : String
     -- , checklists : List Checklist
     , checklist : Checklist
+    , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
     }
+checklist : Focus { r | checklist : a } a
+checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
+
 type alias Checklist =
     { name : String
     , tasks : List Task
     }
+tasks : Focus { r | tasks : a } a
+tasks = Focus.create .tasks (\f r -> { r | tasks = f r.tasks })
+
 type alias Task =
     { text : String
     , done : Bool
@@ -42,6 +50,7 @@ model =
         [ Task "Foo" False
         , Task "Bar" True
         ]
+    , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
     }
 
@@ -71,7 +80,7 @@ We need to be able to:
 type Msg
     = Change String
     -- = LoadFromStorage
-    -- | AppendTask String
+    | AppendTask
     -- | ToggleTask Int
     -- | DeleteTask Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
@@ -82,6 +91,14 @@ update msg model =
     case msg of
         Change newText ->
             pure { model | text = newText }
+        AppendTask ->
+            model
+            |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
+            |> pure
+            -- pure { model |
+            --     newTask = "",
+            --     checklist = { model.checklist |
+            --         tasks = model.checklist.tasks ++ [ Task model.newTask False ] } }
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -91,6 +108,7 @@ update msg model =
 
 type alias Mdl = Material.Model
 
+viewTask : Int -> Task -> Html msg
 viewTask idx submodel =
     let
         color =
@@ -146,13 +164,14 @@ view model =
                 [ Textfield.label "New task"
                 , Textfield.floatingLabel
                 , Textfield.text_
+                , Textfield.value model.newTask
                 ]
                 []
             , Button.render
                 Mdl [1] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.colored
-                -- , Options.onClick AddTask
+                , Options.onClick AppendTask
                 ]
                 [ Icon.i "add" ]
             ]
