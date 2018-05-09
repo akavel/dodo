@@ -78,7 +78,7 @@ We need to be able to:
 - TODO: copy (duplicate) a list with a new name
 -}
 type Msg
-    = Change String
+    = EditNewTask String
     -- = LoadFromStorage
     | AppendTask
     -- | ToggleTask Int
@@ -89,10 +89,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Change newText ->
-            pure { model | text = newText }
+        EditNewTask newText ->
+            pure { model | newTask = newText }
         AppendTask ->
-            model
+            { model | newTask = "" }
             |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
             |> pure
             -- pure { model |
@@ -139,7 +139,7 @@ viewMain model =
             Mdl [0] model.mdl  -- MDL boilerplate
             [ Textfield.label "Your text"
             , Textfield.floatingLabel
-            , Options.onInput Change
+            -- , Options.onInput Change
             ] []
         , Options.styled p
             [ Typo.headline ]
@@ -165,6 +165,7 @@ view model =
                 , Textfield.floatingLabel
                 , Textfield.text_
                 , Textfield.value model.newTask
+                , Options.onInput EditNewTask
                 ]
                 []
             , Button.render
