@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
 import Html.Attributes exposing (class)
+import Html.Events
 -- import Array exposing (Array)
 -- debois/elm-mdl - Material Design Lite (MDL)
 import Material
@@ -79,9 +80,10 @@ We need to be able to:
 - TODO: copy (duplicate) a list with a new name
 -}
 type Msg
-    = EditNewTask String
     -- = LoadFromStorage
+    = EditNewTask String
     | AppendTask
+    | EditTask Int
     -- | ToggleTask Int
     -- | DeleteTask Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
@@ -96,10 +98,9 @@ update msg model =
             { model | newTask = "" }
             |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
             |> pure
-            -- pure { model |
-            --     newTask = "",
-            --     checklist = { model.checklist |
-            --         tasks = model.checklist.tasks ++ [ Task model.newTask False ] } }
+        EditTask idx ->
+            -- TODO
+            pure model
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -109,27 +110,24 @@ update msg model =
 
 type alias Mdl = Material.Model
 
-viewTask : Int -> Task -> Html msg
+viewTask : Int -> Task -> Html Msg
 viewTask idx submodel =
     let
         color =
             if submodel.done
             then Color.color Color.Grey Color.S300
             else Color.black
-    in Lists.li
-        [ ]
-        -- [ Options.css "border-bottom" "1px solid #000 !important"
-        -- ]
+    in Lists.li []
+        -- [ Options.css "border-bottom" "1px solid #000 !important" ]
         -- TODO(akavel): somehow add dividers, maybe in similar way as in:
         -- https://github.com/google/material-design-lite/pull/1785/files
         [ Lists.content
-            -- [ Color.text (Color.color Color.Grey Color.S300) ]
-            -- [ Color.text Color.black ]
             [ Color.text color
+            , Options.attribute <| Html.Events.onClick (EditTask idx)
+            -- , Options.attribute <| Html.Events.onClick <| EditTask <| idx
             -- , Options.css "border-bottom" "1px solid rgba(#000, 0.12) !important"
             -- , Options.css "border-bottom" "1px solid #000 !important"
             ]
-            -- []
             [ text (submodel.text) ]
         ]
 
