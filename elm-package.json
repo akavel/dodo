@@ -2,6 +2,7 @@
     "version": "1.0.0",
     "summary": "TODO-like mobile app, with positive reinforcement calendar (planned)",
     "repository": "https://github.com/akavel/dodo.git",
+    "homepage": "https://akavel.github.io/dodo",
     "license": "GPL-3.0",
     "source-directories": [
         "src"
