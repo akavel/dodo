@@ -6,6 +6,7 @@ import Html.Events
 -- import Array exposing (Array)
 -- debois/elm-mdl - Material Design Lite (MDL)
 import Material
+import Material.Dialog as Dialog
 import Material.Scheme
 import Material.Options as Options
 import Material.Color as Color
@@ -124,6 +125,7 @@ viewTask idx submodel =
         [ Lists.content
             [ Color.text color
             , Options.attribute <| Html.Events.onClick (EditTask idx)
+            , Dialog.openOn "click"
             -- , Options.attribute <| Html.Events.onClick <| EditTask <| idx
             -- , Options.css "border-bottom" "1px solid rgba(#000, 0.12) !important"
             -- , Options.css "border-bottom" "1px solid #000 !important"
@@ -175,6 +177,10 @@ view model =
                 , Options.onClick AppendTask
                 ]
                 [ Icon.i "add" ]
+            ]
+        , Dialog.view []
+            [ Dialog.title []
+                [ text "Hello dialog" ]
             ]
         ]
     |> Material.Scheme.top
