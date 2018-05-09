@@ -30,6 +30,8 @@ type alias Model =
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
     , dialogVisible : Dialog.Visible
+    , dialogTaskIdx : Int
+    , dialogTaskText : String
     }
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
@@ -57,6 +59,8 @@ model =
     , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
     , dialogVisible = Dialog.hidden
+    , dialogTaskIdx = -1
+    , dialogTaskText = ""
     }
 
 
@@ -104,10 +108,18 @@ update msg model =
             |> pure
         EditTask idx ->
             -- TODO handle idx
-            pure { model | dialogVisible = True }
+            pure { model
+                | dialogVisible = True
+                , dialogTaskIdx = idx
+                , dialogTaskText =
+                    Maybe.withDefault "" <| Maybe.map .text <| List.head <| List.drop idx model.checklist.tasks
+                }
         SaveEdit ->
             -- TODO
-            pure { model | dialogVisible = False }
+            pure { model |
+                dialogVisible = False
+                , dialogTaskIdx = -1
+                }
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -184,9 +196,16 @@ view model =
                 [ Icon.i "add" ]
             ]
         , Dialog.render
-            { styles = [ ( "width", "40%" ) ]
-            , title = "Hello dialog"
-            , content = [ text "dialog body" ]
+            { styles = []
+            , title = ""
+            , content =
+                [ Textfield.render
+                    Mdl [100, 0] model.mdl  -- MDL boilerplate
+                    [ Textfield.value model.dialogTaskText
+                    -- , Options.onInput DialogEditTask
+                    ]
+                    []
+                ]
             , actionBar =
                 [ Html.button
                     [ Html.Events.onClick SaveEdit
