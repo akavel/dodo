@@ -1,0 +1,23 @@
+{
+  "name": "dodo",
+  "version": "1.0.0",
+  "description": "This project is bootstrapped with [Create Elm App](https://github.com/halfzebra/create-elm-app).",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://akavel@github.com/akavel/dodo.git"
+  },
+  "keywords": [],
+  "author": "Mateusz Czapliński",
+  "license": "GPL-v3",
+  "bugs": {
+    "url": "https://github.com/akavel/dodo/issues"
+  },
+  "homepage": "https://github.com/akavel/dodo#readme"
+}
