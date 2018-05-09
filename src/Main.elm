@@ -6,7 +6,6 @@ import Html.Events
 -- import Array exposing (Array)
 -- debois/elm-mdl - Material Design Lite (MDL)
 import Material
-import Material.Dialog as Dialog
 import Material.Scheme
 import Material.Options as Options
 import Material.Color as Color
@@ -16,6 +15,7 @@ import Material.Icon as Icon
 import Material.Typography as Typo
 import Material.List as Lists
 import Material.Helpers exposing (pure)
+import Dialog
 import Focus exposing (..)
 import String
 
@@ -29,6 +29,7 @@ type alias Model =
     , checklist : Checklist
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
+    , dialogVisible : Dialog.Visible
     }
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
@@ -55,6 +56,7 @@ model =
         ]
     , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
+    , dialogVisible = Dialog.hidden
     }
 
 
@@ -85,6 +87,7 @@ type Msg
     = EditNewTask String
     | AppendTask
     | EditTask Int
+    | SaveEdit
     -- | ToggleTask Int
     -- | DeleteTask Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
@@ -100,8 +103,11 @@ update msg model =
             |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
             |> pure
         EditTask idx ->
+            -- TODO handle idx
+            pure { model | dialogVisible = True }
+        SaveEdit ->
             -- TODO
-            pure model
+            pure { model | dialogVisible = False }
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -125,7 +131,6 @@ viewTask idx submodel =
         [ Lists.content
             [ Color.text color
             , Options.attribute <| Html.Events.onClick (EditTask idx)
-            , Dialog.openOn "click"
             -- , Options.attribute <| Html.Events.onClick <| EditTask <| idx
             -- , Options.css "border-bottom" "1px solid rgba(#000, 0.12) !important"
             -- , Options.css "border-bottom" "1px solid #000 !important"
@@ -178,10 +183,19 @@ view model =
                 ]
                 [ Icon.i "add" ]
             ]
-        , Dialog.view []
-            [ Dialog.title []
-                [ text "Hello dialog" ]
-            ]
+        , Dialog.render
+            { styles = [ ( "width", "40%" ) ]
+            , title = "Hello dialog"
+            , content = [ text "dialog body" ]
+            , actionBar =
+                [ Html.button
+                    [ Html.Events.onClick SaveEdit
+                    , class "mdl-button mdl-button--raised mdl-button--accent"
+                    ]
+                    [ text "Close" ]
+                ]
+            }
+            model.dialogVisible
         ]
     |> Material.Scheme.top
 
