@@ -15,6 +15,7 @@ import Material.Typography as Typo
 import Material.List as Lists
 import Material.Helpers exposing (pure)
 import Focus exposing (..)
+import String
 
 
 ---- MODEL ----
@@ -64,7 +65,7 @@ init = ( model, Cmd.none )
 
 {-
 We need to be able to:
-- add new items to the current list
+- (done) add new items to the current list
 - remove item from current list
 - disable/reenable item from current list (toggle)
 - edit an item on the list
@@ -172,6 +173,7 @@ view model =
                 Mdl [1] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.colored
+                , Button.disabled |> Options.when (String.trim model.newTask == "")
                 , Options.onClick AppendTask
                 ]
                 [ Icon.i "add" ]
