@@ -7,6 +7,9 @@ import Html.Events
 -- debois/elm-mdl - Material Design Lite (MDL)
 import Material
 import Material.Scheme
+-- import Material.Menu as Menu
+import Material.Toggles as Toggles
+import Material.Elevation as Elevation
 import Material.Options as Options
 import Material.Color as Color
 import Material.Textfield as Textfield
@@ -199,19 +202,66 @@ view model =
             { styles = []
             , title = ""
             , content =
+                -- [ Menu.render
+                --     Mdl [100, 5] model.mdl  -- MDL boilerplate
+                --     [ Menu.bottomRight ]
+                --     [ Menu.item []
+                --         [ Icon.i "delete_forever", text "Delete" ]
+                --     ]
                 [ Textfield.render
                     Mdl [100, 0] model.mdl  -- MDL boilerplate
                     [ Textfield.value model.dialogTaskText
+                    -- , Options.css "float" "left"
                     -- , Options.onInput DialogEditTask
                     ]
                     []
+                -- , Button.render
+                --     Mdl [100, 1] model.mdl  -- MDL boilerplate
+                --     [ Button.fab
+                --     -- [ Button.primary
+                --     -- , Button.colored
+                --     -- , Button.minifab
+                --     -- [ Button.icon
+                --     -- , Options.css "float" "left"
+                --     ]
+                --     [ Icon.i "delete_forever" ]
+                , Button.render
+                    Mdl [100, 2] model.mdl  -- MDL boilerplate
+                    [ Button.colored
+                    , Button.accent
+                    , Button.fab
+                    , Elevation.e4
+                    -- , Options.css "float" "right"
+                    ]
+                    [ Icon.i "sentiment_very_satisfied" ]
                 ]
             , actionBar =
-                [ Html.button
-                    [ Html.Events.onClick SaveEdit
-                    , class "mdl-button mdl-button--raised mdl-button--accent"
+                [ Button.render
+                    Mdl [100, 90] model.mdl  -- MDL boilerplate
+                    [ Button.colored
+                    , Button.raised
+                    , Button.accent
+                    , Options.onClick SaveEdit
                     ]
-                    [ text "Close" ]
+                    [ text "OK" ]
+                , Button.render
+                    Mdl [100, 91] model.mdl  -- MDL boilerplate
+                    [ Button.colored
+                    , Button.raised
+                    , Button.primary
+                    , Options.onClick SaveEdit
+                    ]
+                    [ text "Cancel" ]
+                , Toggles.switch
+                    Mdl [100, 92] model.mdl  -- MDL boilerplate
+                    [ Toggles.value False ]
+                    -- [ text "Delete" ]
+                    [ Icon.i "delete_forever" ]
+                -- [ Html.button
+                --     [ Html.Events.onClick SaveEdit
+                --     , class "mdl-button mdl-button--raised mdl-button--accent"
+                --     ]
+                --     [ text "Close" ]
                 ]
             }
             model.dialogVisible
