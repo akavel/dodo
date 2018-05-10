@@ -55,9 +55,20 @@ html, body {
 
 .edit-actions {
     position: absolute;
-    right: 1em; bottom: 1em;
+    right: 0; bottom: 0; left: 0;
     z-index: 2;
+    padding: 1em 1em;
+    /* border: 3px solid blue; */
+    /* justify-content: space-between; */
+    /* justify-content: space-evenly; */
+    /* justify-content: stretch; */
+    display: flex;
 }
+/* .edit-actions > button:first-child { */
+/*     margin-right: auto; */
+/* } */
+/* .edit-actions > button:first-child:after { */
+/* } */
 
 .grayed-out {
     /* Mostly NOP, but force child position:absolute elements to be contained
@@ -72,7 +83,7 @@ html, body {
     /* position: absolute; */
     z-index: 1;
     top: 0; right: 0; bottom: 0; left: 0;
-    background-color: rgba(.5,.5,.5, .5);
+    background-color: rgba(85%,85%,85%, 75%);
 }
 
 .hidden-out {

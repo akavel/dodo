@@ -1,13 +1,12 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (class, classList, style)
 import Html.Events
 import String
 -- debois/elm-mdl — Material Design Lite (MDL)
 import Material
 import Material.Scheme
-import Material.Toggles as Toggles
 import Material.Elevation as Elevation
 import Material.Options as Options exposing (cs)
 import Material.Color as Color
@@ -152,12 +151,25 @@ view model =
                     ]
                 ]
                 [ Button.render
+                    Mdl [80, 0] model.mdl  -- MDL boilerplate
+                    [ Button.fab
+                    , Button.plain
+                    -- , Options.onClick ...
+                    -- , Options.css "margin-right" "auto"
+                    ]
+                    -- [ Icon.i "close" ]
+                    [ Icon.i "more_horiz" ]
+                -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
+                , div [ style [("flex", "1")] ] []
+                , Button.render
                     Mdl [80, 1] model.mdl  -- MDL boilerplate
                     [ Button.fab
                     , Button.colored
+                    , Button.accent
+                    , Elevation.e4
                     -- , Options.onClick ...
                     ]
-                    [ Icon.i "delete_forever" ]
+                    [ Icon.i "sentiment_very_satisfied" ]
                 ]
             , Lists.ul [ cs "app-checklist" ]
                 (List.indexedMap viewTask model.checklist.tasks)
