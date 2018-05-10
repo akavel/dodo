@@ -38,13 +38,17 @@ html, body {
 .app-header {
     border-bottom: 1px solid rgba(0,0,0, 0.12);
 }
-.app-content {
+.app-main {
     height: 100vh;
-    overflow-y: scroll;
+    overflow-y: hidden;
     /* FIXME(akavel): verify if this follows Material Design guidelines;
        maybe instead color the background of the header & footer?
      */
     border-bottom: 1px solid rgba(0,0,0, 0.12);
+}
+.app-checklist {
+    height: 100vh;
+    overflow-y: scroll;
 }
 .app-footer {
 }

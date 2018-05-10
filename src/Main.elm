@@ -9,12 +9,11 @@ import Material
 import Material.Scheme
 import Material.Toggles as Toggles
 import Material.Elevation as Elevation
-import Material.Options as Options
+import Material.Options as Options exposing (cs)
 import Material.Color as Color
 import Material.Textfield as Textfield
 import Material.Button as Button
 import Material.Icon as Icon
-import Material.Typography as Typo
 import Material.List as Lists
 -- damukles/elm-dialog — MDL Dialog widget
 import Dialog
@@ -136,9 +135,9 @@ view model =
     div [ class "app-layout" ]
         [ header [ class "app-header" ]
             [ text "hello header" ]
-        , main_ [ class "app-content" ]
+        , main_ [ class "app-main" ]
             -- [ text "hello content"
-            [ Lists.ul []
+            [ Lists.ul [ cs "app-checklist" ]
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
         , footer [ class "app-footer" ]
