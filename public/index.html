@@ -52,6 +52,32 @@ html, body {
 }
 .app-footer {
 }
+
+.edit-actions {
+    position: absolute;
+    right: 1em; bottom: 1em;
+    z-index: 2;
+}
+
+.grayed-out {
+    /* Mostly NOP, but force child position:absolute elements to be contained
+       see: https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#Identifying_the_containing_block
+     */
+    transform: translate(0,0);
+}
+.grayed-out:after {
+    content: "";
+    display: block;
+    position: fixed;
+    /* position: absolute; */
+    z-index: 1;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background-color: rgba(.5,.5,.5, .5);
+}
+
+.hidden-out {
+    display: none;
+}
 </style>
 
 </head>

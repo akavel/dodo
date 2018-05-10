@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, classList)
 import Html.Events
 import String
 -- debois/elm-mdl — Material Design Lite (MDL)
@@ -15,8 +15,6 @@ import Material.Textfield as Textfield
 import Material.Button as Button
 import Material.Icon as Icon
 import Material.List as Lists
--- damukles/elm-dialog — MDL Dialog widget
-import Dialog
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 
@@ -30,9 +28,10 @@ type alias Model =
     , checklist : Checklist
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
-    , dialogVisible : Dialog.Visible
-    , dialogTaskIdx : Int
-    , dialogTaskText : String
+    -- TODO(akavel): put below stuff in single Maybe
+    , editTask : Bool
+    , editTaskIdx : Int
+    , editTaskText : String
     }
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
@@ -59,9 +58,9 @@ model =
         ]
     , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
-    , dialogVisible = Dialog.hidden
-    , dialogTaskIdx = -1
-    , dialogTaskText = ""
+    , editTask = False
+    , editTaskIdx = -1
+    , editTaskText = ""
     }
 
 
@@ -106,9 +105,9 @@ update msg model =
             |> flip (!) [Cmd.none]
         EditTask idx ->
             { model
-                | dialogVisible = True
-                , dialogTaskIdx = idx
-                , dialogTaskText =
+                | editTask = True
+                , editTaskIdx = idx
+                , editTaskText =
                     model.checklist.tasks
                     |> List.drop idx
                     |> List.head
@@ -118,8 +117,8 @@ update msg model =
         SaveEdit ->
             -- TODO
             { model |
-                dialogVisible = False
-                , dialogTaskIdx = -1
+                editTask = False
+                , editTaskIdx = -1
                 } ! [Cmd.none]
         Mdl msg_ ->
             Material.update Mdl msg_ model
@@ -133,11 +132,34 @@ type alias Mdl = Material.Model
 view : Model -> Html Msg
 view model =
     div [ class "app-layout" ]
-        [ header [ class "app-header" ]
+        [ header
+            [ classList
+                [ ("app-header", True)
+                , ("grayed-out", model.editTask)
+                ]
+            ]
             [ text "hello header" ]
-        , main_ [ class "app-main" ]
-            -- [ text "hello content"
-            [ Lists.ul [ cs "app-checklist" ]
+        , main_
+            [ classList
+                [ ("app-main", True)
+                , ("grayed-out", model.editTask)
+                ]
+            ]
+            [ div
+                [ classList
+                    [ ("edit-actions", True)
+                    , ("hidden-out", not model.editTask)
+                    ]
+                ]
+                [ Button.render
+                    Mdl [80, 1] model.mdl  -- MDL boilerplate
+                    [ Button.fab
+                    , Button.colored
+                    -- , Options.onClick ...
+                    ]
+                    [ Icon.i "delete_forever" ]
+                ]
+            , Lists.ul [ cs "app-checklist" ]
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
         , footer [ class "app-footer" ]
@@ -159,73 +181,73 @@ view model =
                 ]
                 [ Icon.i "add" ]
             ]
-        , Dialog.render
-            { styles = []
-            , title = ""
-            , content =
-                -- [ Menu.render
-                --     Mdl [100, 5] model.mdl  -- MDL boilerplate
-                --     [ Menu.bottomRight ]
-                --     [ Menu.item []
-                --         [ Icon.i "delete_forever", text "Delete" ]
-                --     ]
-                [ Textfield.render
-                    Mdl [100, 0] model.mdl  -- MDL boilerplate
-                    [ Textfield.value model.dialogTaskText
-                    -- , Options.css "float" "left"
-                    -- , Options.onInput DialogEditTask
-                    ]
-                    []
-                -- , Button.render
-                --     Mdl [100, 1] model.mdl  -- MDL boilerplate
-                --     [ Button.fab
-                --     -- [ Button.primary
-                --     -- , Button.colored
-                --     -- , Button.minifab
-                --     -- [ Button.icon
-                --     -- , Options.css "float" "left"
-                --     ]
-                --     [ Icon.i "delete_forever" ]
-                , Button.render
-                    Mdl [100, 2] model.mdl  -- MDL boilerplate
-                    [ Button.colored
-                    , Button.accent
-                    , Button.fab
-                    , Elevation.e4
-                    -- , Options.css "float" "right"
-                    ]
-                    [ Icon.i "sentiment_very_satisfied" ]
-                ]
-            , actionBar =
-                [ Button.render
-                    Mdl [100, 90] model.mdl  -- MDL boilerplate
-                    [ Button.colored
-                    , Button.raised
-                    , Button.accent
-                    , Options.onClick SaveEdit
-                    ]
-                    [ text "OK" ]
-                , Button.render
-                    Mdl [100, 91] model.mdl  -- MDL boilerplate
-                    [ Button.colored
-                    , Button.raised
-                    , Button.primary
-                    , Options.onClick SaveEdit
-                    ]
-                    [ text "Cancel" ]
-                , Toggles.switch
-                    Mdl [100, 92] model.mdl  -- MDL boilerplate
-                    [ Toggles.value False ]
-                    -- [ text "Delete" ]
-                    [ Icon.i "delete_forever" ]
-                -- [ Html.button
-                --     [ Html.Events.onClick SaveEdit
-                --     , class "mdl-button mdl-button--raised mdl-button--accent"
-                --     ]
-                --     [ text "Close" ]
-                ]
-            }
-            model.dialogVisible
+        -- , Dialog.render
+        --     { styles = []
+        --     , title = ""
+        --     , content =
+        --         -- [ Menu.render
+        --         --     Mdl [100, 5] model.mdl  -- MDL boilerplate
+        --         --     [ Menu.bottomRight ]
+        --         --     [ Menu.item []
+        --         --         [ Icon.i "delete_forever", text "Delete" ]
+        --         --     ]
+        --         [ Textfield.render
+        --             Mdl [100, 0] model.mdl  -- MDL boilerplate
+        --             [ Textfield.value model.dialogTaskText
+        --             -- , Options.css "float" "left"
+        --             -- , Options.onInput DialogEditTask
+        --             ]
+        --             []
+        --         -- , Button.render
+        --         --     Mdl [100, 1] model.mdl  -- MDL boilerplate
+        --         --     [ Button.fab
+        --         --     -- [ Button.primary
+        --         --     -- , Button.colored
+        --         --     -- , Button.minifab
+        --         --     -- [ Button.icon
+        --         --     -- , Options.css "float" "left"
+        --         --     ]
+        --         --     [ Icon.i "delete_forever" ]
+        --         , Button.render
+        --             Mdl [100, 2] model.mdl  -- MDL boilerplate
+        --             [ Button.colored
+        --             , Button.accent
+        --             , Button.fab
+        --             , Elevation.e4
+        --             -- , Options.css "float" "right"
+        --             ]
+        --             [ Icon.i "sentiment_very_satisfied" ]
+        --         ]
+        --     , actionBar =
+        --         [ Button.render
+        --             Mdl [100, 90] model.mdl  -- MDL boilerplate
+        --             [ Button.colored
+        --             , Button.raised
+        --             , Button.accent
+        --             , Options.onClick SaveEdit
+        --             ]
+        --             [ text "OK" ]
+        --         , Button.render
+        --             Mdl [100, 91] model.mdl  -- MDL boilerplate
+        --             [ Button.colored
+        --             , Button.raised
+        --             , Button.primary
+        --             , Options.onClick SaveEdit
+        --             ]
+        --             [ text "Cancel" ]
+        --         , Toggles.switch
+        --             Mdl [100, 92] model.mdl  -- MDL boilerplate
+        --             [ Toggles.value False ]
+        --             -- [ text "Delete" ]
+        --             [ Icon.i "delete_forever" ]
+        --         -- [ Html.button
+        --         --     [ Html.Events.onClick SaveEdit
+        --         --     , class "mdl-button mdl-button--raised mdl-button--accent"
+        --         --     ]
+        --         --     [ text "Close" ]
+        --         ]
+        --     }
+        --     model.dialogVisible
         ]
     |> Material.Scheme.top
 
