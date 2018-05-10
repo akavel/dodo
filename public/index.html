@@ -19,6 +19,7 @@
     <!-- end MDL styles -->
     <title>DODO app</title>
 <style>
+* { margin: 0; padding: 0; }
 html, body {
     height: 100%;
     min-height: 100%;
@@ -26,6 +27,26 @@ html, body {
     min-width: 100%;
     overflow: hidden;
     margin: 0; padding: 0;
+}
+
+.app-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0; padding: 0;
+}
+.app-header {
+    border-bottom: 1px solid rgba(0,0,0, 0.12);
+}
+.app-content {
+    height: 100vh;
+    overflow-y: scroll;
+    /* FIXME(akavel): verify if this follows Material Design guidelines;
+       maybe instead color the background of the header & footer?
+     */
+    border-bottom: 1px solid rgba(0,0,0, 0.12);
+}
+.app-footer {
 }
 </style>
 

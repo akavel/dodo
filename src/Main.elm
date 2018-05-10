@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
-import Html.Attributes exposing (class, style)
+import Html.Attributes exposing (class)
 import Html.Events
 import String
 -- debois/elm-mdl — Material Design Lite (MDL)
@@ -18,8 +18,6 @@ import Material.Typography as Typo
 import Material.List as Lists
 -- damukles/elm-dialog — MDL Dialog widget
 import Dialog
--- brainrape/flex-html — CSS flexbox in Elm
-import Flex
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 
@@ -135,14 +133,15 @@ type alias Mdl = Material.Model
 
 view : Model -> Html Msg
 view model =
-    appLayout
-        [ header []
+    div [ class "app-layout" ]
+        [ header [ class "app-header" ]
             [ text "hello header" ]
-        , tasksLayout
+        , main_ [ class "app-content" ]
+            -- [ text "hello content"
             [ Lists.ul []
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
-        , footer []
+        , footer [ class "app-footer" ]
             [ Textfield.render
                 Mdl [0] model.mdl  -- MDL boilerplate
                 [ Textfield.label "New task"
@@ -243,19 +242,6 @@ viewTask idx submodel =
             ]
             [ text (submodel.text) ]
         ]
-
--- TODO(akavel): make below construction prettier (more regular, less weird operators)
-appLayout = div [ style
-    <| ("height", "100vh")
-    :: Flex.display
-    ++ Flex.direction Flex.Vertical
-    ]
-
-tasksLayout = main_ [ style
-    [ ("height", "100vh")
-    , ("overflow-y", "scroll")
-    , ("border-bottom", "1px solid rgba(0,0,0,0.12)")  -- FIXME(akavel): use Material Design guidelines
-    ] ]
 
 
 ---- PROGRAM ----
