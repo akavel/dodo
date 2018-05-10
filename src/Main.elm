@@ -3,11 +3,10 @@ module Main exposing (..)
 import Html exposing (Html, div, text, p, header, footer, main_)
 import Html.Attributes exposing (class, style)
 import Html.Events
--- import Array exposing (Array)
--- debois/elm-mdl - Material Design Lite (MDL)
+import String
+-- debois/elm-mdl — Material Design Lite (MDL)
 import Material
 import Material.Scheme
--- import Material.Menu as Menu
 import Material.Toggles as Toggles
 import Material.Elevation as Elevation
 import Material.Options as Options
@@ -17,11 +16,12 @@ import Material.Button as Button
 import Material.Icon as Icon
 import Material.Typography as Typo
 import Material.List as Lists
-import Material.Helpers exposing (pure)
+-- damukles/elm-dialog — MDL Dialog widget
 import Dialog
+-- brainrape/flex-html — CSS flexbox in Elm
 import Flex
+-- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
-import String
 
 
 ---- MODEL ----
@@ -29,7 +29,7 @@ import String
 
 type alias Model =
     { text : String
-    -- , checklists : List Checklist
+    -- TODO(akavel): , checklists : List Checklist
     , checklist : Checklist
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
@@ -68,10 +68,6 @@ model =
     }
 
 
-init : ( Model, Cmd Msg )
-init = ( model, Cmd.none )
-
-
 ---- UPDATE ----
 
 
@@ -81,6 +77,7 @@ We need to be able to:
 - remove item from current list
 - disable/reenable item from current list (toggle)
 - edit an item on the list
+- save items on disk and load them on app start
 - TODO: clear (hide) all disabled items
 - TODO: move items around the list
 - TODO: show names of all lists
@@ -105,25 +102,28 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         EditNewTask newText ->
-            pure { model | newTask = newText }
+            { model | newTask = newText } ! [Cmd.none]
         AppendTask ->
             { model | newTask = "" }
             |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
-            |> pure
+            |> flip (!) [Cmd.none]
         EditTask idx ->
-            -- TODO handle idx
-            pure { model
+            { model
                 | dialogVisible = True
                 , dialogTaskIdx = idx
                 , dialogTaskText =
-                    Maybe.withDefault "" <| Maybe.map .text <| List.head <| List.drop idx model.checklist.tasks
-                }
+                    model.checklist.tasks
+                    |> List.drop idx
+                    |> List.head
+                    |> Maybe.map .text
+                    |> Maybe.withDefault ""
+                } ! [Cmd.none]
         SaveEdit ->
             -- TODO
-            pure { model |
+            { model |
                 dialogVisible = False
                 , dialogTaskIdx = -1
-                }
+                } ! [Cmd.none]
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -132,35 +132,6 @@ update msg model =
 ---- VIEW ----
 
 type alias Mdl = Material.Model
-
-viewTask : Int -> Task -> Html Msg
-viewTask idx submodel =
-    Lists.li
-        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
-        -- see: https://github.com/google/material-design-lite/pull/1785/files
-        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)" ]
-        [ Lists.content
-            [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
-            , Options.attribute <| Html.Events.onClick (EditTask idx)
-            ]
-            [ text (submodel.text) ]
-        ]
-
-viewMain : Model -> Html Msg
-viewMain model =
-    div []
-        [ Textfield.render
-            Mdl [0] model.mdl  -- MDL boilerplate
-            [ Textfield.label "Your text"
-            , Textfield.floatingLabel
-            -- , Options.onInput Change
-            ] []
-        , Options.styled p
-            [ Typo.headline ]
-            [ text (String.reverse model.text) ]
-        , Lists.ul []
-            (List.indexedMap viewTask model.checklist.tasks)
-        ]
 
 view : Model -> Html Msg
 view model =
@@ -260,6 +231,18 @@ view model =
         ]
     |> Material.Scheme.top
 
+viewTask : Int -> Task -> Html Msg
+viewTask idx submodel =
+    Lists.li
+        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
+        -- see: https://github.com/google/material-design-lite/pull/1785/files
+        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)" ]
+        [ Lists.content
+            [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
+            , Options.attribute <| Html.Events.onClick (EditTask idx)
+            ]
+            [ text (submodel.text) ]
+        ]
 
 -- TODO(akavel): make below construction prettier (more regular, less weird operators)
 appLayout = div [ style
@@ -267,6 +250,7 @@ appLayout = div [ style
     :: Flex.display
     ++ Flex.direction Flex.Vertical
     ]
+
 tasksLayout = main_ [ style
     [ ("height", "100vh")
     , ("overflow-y", "scroll")
@@ -281,7 +265,7 @@ main : Program Never Model Msg
 main =
     Html.program
         { view = view
-        , init = init
+        , init = (model, Cmd.none)
         , update = update
         , subscriptions = always Sub.none
         }
