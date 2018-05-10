@@ -135,21 +135,13 @@ type alias Mdl = Material.Model
 
 viewTask : Int -> Task -> Html Msg
 viewTask idx submodel =
-    let
-        color =
-            if submodel.done
-            then Color.color Color.Grey Color.S300
-            else Color.black
-    in Lists.li []
-        -- [ Options.css "border-bottom" "1px solid #000 !important" ]
-        -- TODO(akavel): somehow add dividers, maybe in similar way as in:
-        -- https://github.com/google/material-design-lite/pull/1785/files
+    Lists.li
+        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
+        -- see: https://github.com/google/material-design-lite/pull/1785/files
+        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)" ]
         [ Lists.content
-            [ Color.text color
+            [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
             , Options.attribute <| Html.Events.onClick (EditTask idx)
-            -- , Options.attribute <| Html.Events.onClick <| EditTask <| idx
-            -- , Options.css "border-bottom" "1px solid rgba(#000, 0.12) !important"
-            -- , Options.css "border-bottom" "1px solid #000 !important"
             ]
             [ text (submodel.text) ]
         ]
