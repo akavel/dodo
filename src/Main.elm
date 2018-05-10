@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, style)
 import Html.Events
 -- import Array exposing (Array)
 -- debois/elm-mdl - Material Design Lite (MDL)
@@ -19,6 +19,7 @@ import Material.Typography as Typo
 import Material.List as Lists
 import Material.Helpers exposing (pure)
 import Dialog
+import Flex
 import Focus exposing (..)
 import String
 
@@ -171,15 +172,14 @@ viewMain model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "app-layout" ]
-        [ header [ class "app-header" ]
+    appLayout
+        [ header []
             [ text "hello header" ]
-        , main_ [ class "app-content" ]
-            -- [ text "hello content"
+        , tasksLayout
             [ Lists.ul []
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
-        , footer [ class "app-footer" ]
+        , footer []
             [ Textfield.render
                 Mdl [0] model.mdl  -- MDL boilerplate
                 [ Textfield.label "New task"
@@ -268,6 +268,18 @@ view model =
         ]
     |> Material.Scheme.top
 
+
+-- TODO(akavel): make below construction prettier (more regular, less weird operators)
+appLayout = div [ style
+    <| ("height", "100vh")
+    :: Flex.display
+    ++ Flex.direction Flex.Vertical
+    ]
+tasksLayout = main_ [ style
+    [ ("height", "100vh")
+    , ("overflow-y", "scroll")
+    , ("border-bottom", "1px solid rgba(0,0,0,0.12)")  -- FIXME(akavel): use Material Design guidelines
+    ] ]
 
 
 ---- PROGRAM ----
