@@ -125,6 +125,7 @@ type Msg
     | EditNewTask String
     | AppendTask
     | EditTask Int
+    | EditTaskText String
     | SaveEdit
     -- | ToggleTask Int
     -- | DeleteTask Int
@@ -159,6 +160,8 @@ update msg model =
                     |> Maybe.map .text
                     |> Maybe.withDefault ""
                 } ! [Cmd.none]
+        EditTaskText newText ->
+            { model | editTaskText = newText } ! [Cmd.none]
         SaveEdit ->
             -- TODO
             { model |
@@ -221,24 +224,7 @@ view model =
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
         , footer [ class "app-footer" ]
-            [ Textfield.render
-                Mdl [0] model.mdl  -- MDL boilerplate
-                [ Textfield.label "New task"
-                , Textfield.floatingLabel
-                , Textfield.text_
-                , Textfield.value model.newTask
-                , Options.onInput EditNewTask
-                ]
-                []
-            , Button.render
-                Mdl [1] model.mdl  -- MDL boilerplate
-                [ Button.fab
-                , Button.colored
-                , Button.disabled |> Options.when (String.trim model.newTask == "")
-                , Options.onClick AppendTask
-                ]
-                [ Icon.i "add" ]
-            ]
+            (viewFooter model)
         -- , Dialog.render
         --     { styles = []
         --     , title = ""
@@ -314,10 +300,47 @@ viewTask idx submodel =
     Lists.li
         -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
         -- see: https://github.com/google/material-design-lite/pull/1785/files
-        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)" ]
+        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
+        -- FIXME(akavel): why below doesn't work?
+        , Options.when (model.editTask && idx == model.editTaskIdx)
+            <| Color.background Color.primary
+        ]
         [ Lists.content
             [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
             , Options.attribute <| Html.Events.onClick (EditTask idx)
             ]
             [ text (submodel.text) ]
+        ]
+
+viewFooter model =
+    if model.editTask
+    then
+        [ Textfield.render
+            Mdl [0] model.mdl  -- MDL boilerplate
+            [ Textfield.label "Edit task"
+            , Textfield.floatingLabel
+            , Textfield.text_
+            , Textfield.value model.editTaskText
+            , Options.onInput EditTaskText
+            ]
+            []
+        ]
+    else
+        [ Textfield.render
+            Mdl [0] model.mdl  -- MDL boilerplate
+            [ Textfield.label "New task"
+            , Textfield.floatingLabel
+            , Textfield.text_
+            , Textfield.value model.newTask
+            , Options.onInput EditNewTask
+            ]
+            []
+        , Button.render
+            Mdl [1] model.mdl  -- MDL boilerplate
+            [ Button.fab
+            , Button.colored
+            , Button.disabled |> Options.when (String.trim model.newTask == "")
+            , Options.onClick AppendTask
+            ]
+            [ Icon.i "add" ]
         ]
