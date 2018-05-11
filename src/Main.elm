@@ -127,9 +127,9 @@ type Msg
     | EditTask Int
     | EditTaskText String
     | CancelEdit
+    | ToggleTask
     | SaveEdit
     | DeleteTask
-    -- | ToggleTask Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
@@ -149,7 +149,7 @@ update msg model =
                     |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
                 storageV0 =
                     StorageV0 newModel.checklist
-            in (newModel, saveStorage storageV0)
+            in ( newModel, saveStorage storageV0 )
         EditTask idx ->
             { model
                 | editTask = True
@@ -163,43 +163,37 @@ update msg model =
         EditTaskText newText ->
             { model | editTaskText = newText } ! [Cmd.none]
         CancelEdit ->
-            { model
-                | editTask = False
-                , editTaskIdx = -1
-            } ! [Cmd.none]
-        SaveEdit ->
+            ( model |> stopEdit, Cmd.none )
+        ToggleTask ->
             let
-                newTasks =
-                    model.checklist.tasks
-                    |> List.indexedMap (\idx task ->
-                        if idx == model.editTaskIdx
-                            then { task | text = model.editTaskText }
-                            else task)
                 newModel =
-                    { model
-                        | editTask = False
-                        , editTaskIdx = -1 }
-                    |> Focus.update (checklist => tasks) (\tasks -> newTasks)
+                    model |> stopEdit |> transformTasksWith (\idx task ->
+                        if idx == model.editTaskIdx
+                            then Just { task | done = not task.done }
+                            else Just task)
                 storageV0 =
                     StorageV0 newModel.checklist
-            in (newModel, saveStorage storageV0)
+            in ( newModel, saveStorage storageV0 )
+        SaveEdit ->
+            let
+                newModel =
+                    model |> stopEdit |> transformTasksWith (\idx task ->
+                        if idx == model.editTaskIdx
+                            then Just { task | text = model.editTaskText }
+                            else Just task)
+                storageV0 =
+                    StorageV0 newModel.checklist
+            in ( newModel, saveStorage storageV0 )
         DeleteTask ->
             let
-                remainingTasks =
-                    model.checklist.tasks
-                    |> List.indexedMap (,)
-                    |> List.filterMap (\(idx, task) ->
+                newModel =
+                    model |> stopEdit |> transformTasksWith (\idx task ->
                         if idx == model.editTaskIdx
                             then Nothing
                             else Just task)
-                newModel =
-                    { model
-                        | editTask = False
-                        , editTaskIdx = -1 }
-                    |> Focus.update (checklist => tasks) (\tasks -> remainingTasks)
                 storageV0 =
                     StorageV0 newModel.checklist
-            in (newModel, saveStorage storageV0)
+            in ( newModel, saveStorage storageV0 )
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -262,12 +256,22 @@ viewTask idx submodel =
 
 viewEditActions model =
     let
-        oldText =
+        originalTask =
             model.checklist.tasks
             |> nth model.editTaskIdx
+        originalText =
+            originalTask
             |> Maybe.map .text
         isNotEdited =
-            oldText == Just model.editTaskText
+            originalText == Just model.editTaskText
+        isDone =
+            originalTask
+            |> Maybe.map .done
+            |> Maybe.withDefault False
+        doneIcon =
+            if isDone == True
+                then "sentiment_satisfied"       -- clicking will go back to only "satisfied"
+                else "sentiment_very_satisfied"  -- clicking will mark done == "very satisfied"
         -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
         stretcher =
             div [ style [("flex", "1")] ] []
@@ -298,11 +302,12 @@ viewEditActions model =
                 Mdl [80, 9] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.colored
-                , Button.accent
+                , Button.accent |> Options.when (not isDone)
+                , Button.primary |> Options.when isDone
                 , Elevation.e4
-                -- , Options.onClick ...
+                , Options.onClick ToggleTask
                 ]
-                [ Icon.i "sentiment_very_satisfied" ]
+                [ Icon.i doneIcon ]
             ]
         else
             [ Button.render
@@ -363,4 +368,23 @@ viewFooter model =
 nth : Int -> List a -> Maybe a
 nth n list =
     List.head <| List.drop n list
+
+stopEdit : Model -> Model
+stopEdit model =
+    { model
+        | editTask = False
+        , editTaskIdx = -1 }
+
+transformTasksWith : (Int -> Task -> Maybe Task) -> Model -> Model
+transformTasksWith taskModifier model =
+    let
+        listModifier tasks =
+            tasks
+            |> List.indexedMap taskModifier
+            |> List.filterMap identity
+    in
+        { model
+            | editTask = False
+            , editTaskIdx = -1 }
+        |> Focus.update (checklist => tasks) listModifier
 
