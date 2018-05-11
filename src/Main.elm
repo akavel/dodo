@@ -128,8 +128,8 @@ type Msg
     | EditTaskText String
     | CancelEdit
     | SaveEdit
+    | DeleteTask
     -- | ToggleTask Int
-    -- | DeleteTask Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
@@ -170,7 +170,8 @@ update msg model =
         SaveEdit ->
             let
                 newTasks =
-                    model.checklist.tasks |> List.indexedMap (\idx task ->
+                    model.checklist.tasks
+                    |> List.indexedMap (\idx task ->
                         if idx == model.editTaskIdx
                             then { task | text = model.editTaskText }
                             else task)
@@ -179,6 +180,23 @@ update msg model =
                         | editTask = False
                         , editTaskIdx = -1 }
                     |> Focus.update (checklist => tasks) (\tasks -> newTasks)
+                storageV0 =
+                    StorageV0 newModel.checklist
+            in (newModel, saveStorage storageV0)
+        DeleteTask ->
+            let
+                remainingTasks =
+                    model.checklist.tasks
+                    |> List.indexedMap (,)
+                    |> List.filterMap (\(idx, task) ->
+                        if idx == model.editTaskIdx
+                            then Nothing
+                            else Just task)
+                newModel =
+                    { model
+                        | editTask = False
+                        , editTaskIdx = -1 }
+                    |> Focus.update (checklist => tasks) (\tasks -> remainingTasks)
                 storageV0 =
                     StorageV0 newModel.checklist
             in (newModel, saveStorage storageV0)
@@ -327,13 +345,16 @@ viewEditActions model =
                 , Options.onClick CancelEdit
                 ]
                 [ Icon.i "close" ]
+            , stretcher
+            -- TODO(akavel): make the menu icon bigger & proper fab (or at least minifab)
             , Menu.render
                 Mdl [80, 1] model.mdl  -- MDL boilerplate
                 [ Menu.topLeft
                 , Menu.icon "delete"
                 , Options.css "id" "edit-menu"
                 ]
-                [ Menu.item []
+                [ Menu.item
+                    [ Menu.onSelect DeleteTask ]
                     [ Icon.i "delete_forever", text "Delete forever?" ]
                 ]
             , stretcher
