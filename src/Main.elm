@@ -350,6 +350,7 @@ viewFooter model =
             , Textfield.floatingLabel
             , Textfield.text_
             , Textfield.value model.editTaskText
+            , Options.attribute <| Html.Attributes.attribute "autocapitalize" "sentences"
             , Options.onInput EditTaskText
             ]
             []
@@ -361,6 +362,7 @@ viewFooter model =
             , Textfield.floatingLabel
             , Textfield.text_
             , Textfield.value model.newTask
+            , Options.attribute <| Html.Attributes.attribute "autocapitalize" "sentences"
             , Options.onInput EditNewTask
             ]
             []
