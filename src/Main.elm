@@ -110,7 +110,7 @@ We need to be able to:
 - remove item from current list
 - disable/reenable item from current list (toggle)
 - edit an item on the list
-- save items on disk and load them on app start
+- (done) save items on disk and load them on app start
 - TODO: clear (hide) all disabled items
 - TODO: move items around the list
 - TODO: show names of all lists
@@ -199,25 +199,12 @@ view model =
                 [ Menu.render
                     Mdl [80, 0] model.mdl
                     [ Menu.topLeft
-                    , Menu.icon "more_horiz"
+                    , Menu.icon "delete"
                     , Options.css "id" "edit-menu"
                     ]
-                    [ Menu.item
-                        []
-                        [ text "some item 1" ]
-                    , Menu.item
-                        []
-                        [ text "some item 2" ]
+                    [ Menu.item []
+                        [ Icon.i "delete_forever", text "Delete forever?" ]
                     ]
-                -- [ Button.render
-                --     Mdl [80, 0] model.mdl  -- MDL boilerplate
-                --     [ Button.fab
-                --     , Button.plain
-                --     -- , Options.onClick ...
-                --     -- , Options.css "margin-right" "auto"
-                --     ]
-                --     -- [ Icon.i "close" ]
-                --     [ Icon.i "more_horiz" ]
                 -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
                 , div [ style [("flex", "1")] ] []
                 , Button.render
