@@ -14,6 +14,7 @@ import Material.Textfield as Textfield
 import Material.Button as Button
 import Material.Icon as Icon
 import Material.List as Lists
+import Material.Menu as Menu
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 
@@ -150,15 +151,28 @@ view model =
                     , ("hidden-out", not model.editTask)
                     ]
                 ]
-                [ Button.render
-                    Mdl [80, 0] model.mdl  -- MDL boilerplate
-                    [ Button.fab
-                    , Button.plain
-                    -- , Options.onClick ...
-                    -- , Options.css "margin-right" "auto"
+                [ Menu.render
+                    Mdl [80, 0] model.mdl
+                    [ Menu.topLeft
+                    , Menu.icon "more_horiz"
+                    , Options.css "id" "edit-menu"
                     ]
-                    -- [ Icon.i "close" ]
-                    [ Icon.i "more_horiz" ]
+                    [ Menu.item
+                        []
+                        [ text "some item 1" ]
+                    , Menu.item
+                        []
+                        [ text "some item 2" ]
+                    ]
+                -- [ Button.render
+                --     Mdl [80, 0] model.mdl  -- MDL boilerplate
+                --     [ Button.fab
+                --     , Button.plain
+                --     -- , Options.onClick ...
+                --     -- , Options.css "margin-right" "auto"
+                --     ]
+                --     -- [ Icon.i "close" ]
+                --     [ Icon.i "more_horiz" ]
                 -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
                 , div [ style [("flex", "1")] ] []
                 , Button.render
@@ -286,5 +300,6 @@ main =
         { view = view
         , init = (model, Cmd.none)
         , update = update
-        , subscriptions = always Sub.none
+        -- , subscriptions = always Sub.none
+        , subscriptions = (\model -> Menu.subs Mdl model.mdl)
         }
