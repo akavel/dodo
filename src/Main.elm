@@ -288,7 +288,7 @@ viewEditActions model =
                 ]
                 [ Menu.item
                     [ Menu.onSelect DeleteTask ]
-                    [ Icon.i "delete_forever", text "Delete forever?" ]
+                    [ Icon.i "delete_forever", text "Delete task?" ]
                 ]
             , stretcher
             , Button.render
