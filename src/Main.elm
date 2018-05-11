@@ -183,7 +183,7 @@ view model =
                 , ("grayed-out", model.editTask)
                 ]
             ]
-            [ text "hello header" ]
+            [ text model.checklist.name ]
         , main_
             [ classList
                 [ ("app-main", True)
