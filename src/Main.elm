@@ -259,8 +259,9 @@ viewTask idx submodel =
                 <| Color.background Color.primary
             ]
             [ Lists.content
-                [ Options.when submodel.done <| Color.text gray ]
-                -- FIXME(akavel): text should be always justified to left; currently long text gets centered
+                [ Options.when submodel.done <| Color.text gray
+                , Options.css "text-align" "left"
+                ]
                 [ text (submodel.text) ]
             , content2
             ]
