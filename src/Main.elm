@@ -126,6 +126,7 @@ type Msg
     | AppendTask
     | EditTask Int
     | EditTaskText String
+    | CancelEdit
     | SaveEdit
     -- | ToggleTask Int
     -- | DeleteTask Int
@@ -161,6 +162,11 @@ update msg model =
                 } ! [Cmd.none]
         EditTaskText newText ->
             { model | editTaskText = newText } ! [Cmd.none]
+        CancelEdit ->
+            { model
+                | editTask = False
+                , editTaskIdx = -1
+            } ! [Cmd.none]
         SaveEdit ->
             let
                 newTasks =
@@ -289,13 +295,13 @@ viewTask idx submodel =
         -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
         -- see: https://github.com/google/material-design-lite/pull/1785/files
         [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
+        , Options.attribute <| Html.Events.onClick (EditTask idx)
         -- FIXME(akavel): why below doesn't work?
         , Options.when (model.editTask && idx == model.editTaskIdx)
             <| Color.background Color.primary
         ]
         [ Lists.content
             [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
-            , Options.attribute <| Html.Events.onClick (EditTask idx)
             ]
             [ text (submodel.text) ]
         ]
@@ -314,8 +320,15 @@ viewEditActions model =
     in
         if isNotEdited
         then
-            [ Menu.render
-                Mdl [80, 0] model.mdl
+            [ Button.render
+                Mdl [80, 0] model.mdl  -- MDL boilerplate
+                [ Button.fab
+                , Button.flat
+                , Options.onClick CancelEdit
+                ]
+                [ Icon.i "close" ]
+            , Menu.render
+                Mdl [80, 1] model.mdl  -- MDL boilerplate
                 [ Menu.topLeft
                 , Menu.icon "delete"
                 , Options.css "id" "edit-menu"
@@ -325,7 +338,7 @@ viewEditActions model =
                 ]
             , stretcher
             , Button.render
-                Mdl [80, 1] model.mdl  -- MDL boilerplate
+                Mdl [80, 9] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.colored
                 , Button.accent
@@ -339,11 +352,12 @@ viewEditActions model =
                 Mdl [81, 0] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.flat
+                , Options.onClick CancelEdit
                 ]
                 [ Icon.i "close" ]
             , stretcher
             , Button.render
-                Mdl [81, 1] model.mdl  -- MDL boilerplate
+                Mdl [81, 9] model.mdl  -- MDL boilerplate
                 [ Button.fab
                 , Button.colored
                 , Button.accent
