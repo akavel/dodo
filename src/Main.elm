@@ -238,21 +238,32 @@ view model =
 
 viewTask : Int -> Task -> Html Msg
 viewTask idx submodel =
-    Lists.li
-        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
-        -- see: https://github.com/google/material-design-lite/pull/1785/files
-        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
-        , Options.attribute <| Html.Events.onClick (EditTask idx)
-        -- FIXME(akavel): why below doesn't work?
-        , Options.when (model.editTask && idx == model.editTaskIdx)
-            <| Color.background Color.primary
-        ]
-        [ Lists.content
-            [ Options.when submodel.done <| Color.text (Color.color Color.Grey Color.S300)
+    let
+        gray =
+            Color.color Color.Grey Color.S300
+        content2 =
+            if submodel.done
+            then
+                Lists.content2 []
+                    [ Icon.view "sentiment_very_satisfied" [ Color.text gray ] ]
+            else
+                text ""
+    in
+        Lists.li
+            -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
+            -- see: https://github.com/google/material-design-lite/pull/1785/files
+            [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
+            , Options.attribute <| Html.Events.onClick (EditTask idx)
+            -- FIXME(akavel): why below doesn't work?
+            , Options.when (model.editTask && idx == model.editTaskIdx)
+                <| Color.background Color.primary
             ]
-            -- FIXME(akavel): text should be always justified to left; currently long text gets centered
-            [ text (submodel.text) ]
-        ]
+            [ Lists.content
+                [ Options.when submodel.done <| Color.text gray ]
+                -- FIXME(akavel): text should be always justified to left; currently long text gets centered
+                [ text (submodel.text) ]
+            , content2
+            ]
 
 viewEditActions model =
     let
