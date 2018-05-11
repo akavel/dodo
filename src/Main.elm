@@ -141,9 +141,13 @@ update msg model =
         EditNewTask newText ->
             { model | newTask = newText } ! [Cmd.none]
         AppendTask ->
-            { model | newTask = "" }
-            |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
-            |> flip (!) [Cmd.none]
+            let
+                newModel =
+                    { model | newTask = "" }
+                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
+                storageV0 =
+                    StorageV0 newModel.checklist
+            in (newModel, saveStorage storageV0)
         EditTask idx ->
             { model
                 | editTask = True
