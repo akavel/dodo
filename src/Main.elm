@@ -316,6 +316,7 @@ viewEditActions model =
                 , Button.colored
                 , Button.accent
                 , Elevation.e4
+                , Button.disabled |> Options.when (String.trim model.editTaskText == "")
                 , Options.onClick SaveEdit
                 ]
                 [ Icon.i "check" ]
