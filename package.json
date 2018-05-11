@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/akavel/dodo#readme",
   "dependencies": {
-    "dialog-polyfill": "^0.4.9",
     "localforage": "^1.7.1"
   }
 }
