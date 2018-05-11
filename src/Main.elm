@@ -155,19 +155,27 @@ update msg model =
                 , editTaskIdx = idx
                 , editTaskText =
                     model.checklist.tasks
-                    |> List.drop idx
-                    |> List.head
+                    |> nth idx
                     |> Maybe.map .text
                     |> Maybe.withDefault ""
                 } ! [Cmd.none]
         EditTaskText newText ->
             { model | editTaskText = newText } ! [Cmd.none]
         SaveEdit ->
-            -- TODO
-            { model |
-                editTask = False
-                , editTaskIdx = -1
-                } ! [Cmd.none]
+            let
+                newTasks =
+                    model.checklist.tasks |> List.indexedMap (\idx task ->
+                        if idx == model.editTaskIdx
+                            then { task | text = model.editTaskText }
+                            else task)
+                newModel =
+                    { model
+                        | editTask = False
+                        , editTaskIdx = -1 }
+                    |> Focus.update (checklist => tasks) (\tasks -> newTasks)
+                storageV0 =
+                    StorageV0 newModel.checklist
+            in (newModel, saveStorage storageV0)
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -199,27 +207,7 @@ view model =
                     , ("hidden-out", not model.editTask)
                     ]
                 ]
-                [ Menu.render
-                    Mdl [80, 0] model.mdl
-                    [ Menu.topLeft
-                    , Menu.icon "delete"
-                    , Options.css "id" "edit-menu"
-                    ]
-                    [ Menu.item []
-                        [ Icon.i "delete_forever", text "Delete forever?" ]
-                    ]
-                -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
-                , div [ style [("flex", "1")] ] []
-                , Button.render
-                    Mdl [80, 1] model.mdl  -- MDL boilerplate
-                    [ Button.fab
-                    , Button.colored
-                    , Button.accent
-                    , Elevation.e4
-                    -- , Options.onClick ...
-                    ]
-                    [ Icon.i "sentiment_very_satisfied" ]
-                ]
+                (viewEditActions model)
             , Lists.ul [ cs "app-checklist" ]
                 (List.indexedMap viewTask model.checklist.tasks)
             ]
@@ -312,6 +300,59 @@ viewTask idx submodel =
             [ text (submodel.text) ]
         ]
 
+viewEditActions model =
+    let
+        oldText =
+            model.checklist.tasks
+            |> nth model.editTaskIdx
+            |> Maybe.map .text
+        isNotEdited =
+            oldText == Just model.editTaskText
+        -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
+        stretcher =
+            div [ style [("flex", "1")] ] []
+    in
+        if isNotEdited
+        then
+            [ Menu.render
+                Mdl [80, 0] model.mdl
+                [ Menu.topLeft
+                , Menu.icon "delete"
+                , Options.css "id" "edit-menu"
+                ]
+                [ Menu.item []
+                    [ Icon.i "delete_forever", text "Delete forever?" ]
+                ]
+            , stretcher
+            , Button.render
+                Mdl [80, 1] model.mdl  -- MDL boilerplate
+                [ Button.fab
+                , Button.colored
+                , Button.accent
+                , Elevation.e4
+                -- , Options.onClick ...
+                ]
+                [ Icon.i "sentiment_very_satisfied" ]
+            ]
+        else
+            [ Button.render
+                Mdl [81, 0] model.mdl  -- MDL boilerplate
+                [ Button.fab
+                , Button.flat
+                ]
+                [ Icon.i "close" ]
+            , stretcher
+            , Button.render
+                Mdl [81, 1] model.mdl  -- MDL boilerplate
+                [ Button.fab
+                , Button.colored
+                , Button.accent
+                , Elevation.e4
+                , Options.onClick SaveEdit
+                ]
+                [ Icon.i "check" ]
+            ]
+
 viewFooter model =
     if model.editTask
     then
@@ -344,3 +385,10 @@ viewFooter model =
             ]
             [ Icon.i "add" ]
         ]
+
+---- UTILS ----
+
+nth : Int -> List a -> Maybe a
+nth n list =
+    List.head <| List.drop n list
+
