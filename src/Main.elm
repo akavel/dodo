@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
 import Html.Attributes exposing (class, classList, style)
@@ -17,6 +17,20 @@ import Material.List as Lists
 import Material.Menu as Menu
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
+
+
+---- PROGRAM ----
+
+
+main : Program Never Model Msg
+main =
+    Html.program
+        { view = view
+        , init = (model, loadStorage ())
+        , update = update
+        -- , subscriptions = always Sub.none
+        , subscriptions = subscriptions
+        }
 
 
 ---- MODEL ----
@@ -64,6 +78,29 @@ model =
     }
 
 
+---- PORTS ----
+
+type alias StorageV0 =
+    { checklist : Checklist
+    -- TODO(akavel): add newTask, editTask*
+    }
+
+port saveStorage : StorageV0 -> Cmd msg
+port loadStorage : () -> Cmd msg
+port storageContents : (Maybe StorageV0 -> msg) -> Sub msg
+
+
+---- SUBSCRIPTIONS ----
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Menu.subs Mdl model.mdl
+        , storageContents LoadedStorageV0
+        ]
+
+
 ---- UPDATE ----
 
 
@@ -84,8 +121,8 @@ We need to be able to:
 - TODO: copy (duplicate) a list with a new name
 -}
 type Msg
-    -- = LoadFromStorage
-    = EditNewTask String
+    = LoadedStorageV0 (Maybe StorageV0)
+    | EditNewTask String
     | AppendTask
     | EditTask Int
     | SaveEdit
@@ -97,6 +134,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        LoadedStorageV0 Nothing ->
+            { model | checklist = Checklist "New List 0" [] } ! [Cmd.none]
+        LoadedStorageV0 (Just storageV0) ->
+            { model | checklist = storageV0.checklist } ! [Cmd.none]
         EditNewTask newText ->
             { model | newTask = newText } ! [Cmd.none]
         AppendTask ->
@@ -289,17 +330,3 @@ viewTask idx submodel =
             ]
             [ text (submodel.text) ]
         ]
-
-
----- PROGRAM ----
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { view = view
-        , init = (model, Cmd.none)
-        , update = update
-        -- , subscriptions = always Sub.none
-        , subscriptions = (\model -> Menu.subs Mdl model.mdl)
-        }
