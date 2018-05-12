@@ -15,6 +15,7 @@ import Material.Button as Button
 import Material.Icon as Icon
 import Material.List as Lists
 import Material.Menu as Menu
+import Material.Tabs as Tabs
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 
@@ -46,6 +47,7 @@ type alias Model =
     , editTask : Bool
     , editTaskIdx : Int
     , editTaskText : String
+    , selectedTab : Int
     }
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
@@ -75,6 +77,7 @@ model =
     , editTask = False
     , editTaskIdx = -1
     , editTaskText = ""
+    , selectedTab = 0
     }
 
 
@@ -122,6 +125,7 @@ We need to be able to:
 -}
 type Msg
     = LoadedStorageV0 (Maybe StorageV0)
+    | SelectTab Int
     | EditNewTask String
     | AppendTask
     | EditTask Int
@@ -140,6 +144,8 @@ update msg model =
             { model | checklist = Checklist "New List 0" [] } ! [Cmd.none]
         LoadedStorageV0 (Just storageV0) ->
             { model | checklist = storageV0.checklist } ! [Cmd.none]
+        SelectTab t ->
+            { model | selectedTab = t } ! [Cmd.none]
         EditNewTask newText ->
             { model | newTask = newText } ! [Cmd.none]
         AppendTask ->
@@ -205,34 +211,51 @@ type alias Mdl = Material.Model
 
 view : Model -> Html Msg
 view model =
-    div [ class "app-layout" ]
-        [ header
-            [ classList
-                [ ("app-header", True)
-                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                , ("grayed-out", model.editTask)
-                ]
-            ]
-            [ text model.checklist.name ]
-        , main_
-            [ classList
-                [ ("app-main", True)
-                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                , ("grayed-out", model.editTask)
-                ]
-            ]
-            [ div
+    Tabs.render
+        Mdl [0] model.mdl
+        [ Tabs.activeTab model.selectedTab
+        , Tabs.onSelectTab SelectTab
+        , Tabs.ripple
+        ]
+        [ Tabs.label
+            [ Options.center ]
+            [ Icon.i "library_books" ]
+        , Tabs.label
+            [ Options.center ]
+            [ Icon.i "playlist_add_check" ]
+        , Tabs.label
+            [ Options.center ]
+            [ Icon.i "event_available" ]
+        ]
+        [ div [ class "app-layout" ]
+            [ header
                 [ classList
-                    [ ("edit-actions", True)
-                    , ("hidden-out", not model.editTask)
+                    [ ("app-header", True)
+                    -- TODO(akavel): clicking grayed-out area should cause CancelEdit
+                    , ("grayed-out", model.editTask)
                     ]
                 ]
-                (viewEditActions model)
-            , Lists.ul [ cs "app-checklist" ]
-                (List.indexedMap viewTask model.checklist.tasks)
+                [ text model.checklist.name ]
+            , main_
+                [ classList
+                    [ ("app-main", True)
+                    -- TODO(akavel): clicking grayed-out area should cause CancelEdit
+                    , ("grayed-out", model.editTask)
+                    ]
+                ]
+                [ div
+                    [ classList
+                        [ ("edit-actions", True)
+                        , ("hidden-out", not model.editTask)
+                        ]
+                    ]
+                    (viewEditActions model)
+                , Lists.ul [ cs "app-checklist" ]
+                    (List.indexedMap viewTask model.checklist.tasks)
+                ]
+            , footer [ class "app-footer" ]
+                (viewFooter model)
             ]
-        , footer [ class "app-footer" ]
-            (viewFooter model)
         ]
     |> Material.Scheme.top
 
@@ -346,7 +369,7 @@ viewFooter model =
     if model.editTask
     then
         [ Textfield.render
-            Mdl [0] model.mdl  -- MDL boilerplate
+            Mdl [1] model.mdl  -- MDL boilerplate
             [ Textfield.label "Edit task"
             , Textfield.floatingLabel
             , Textfield.text_
@@ -358,7 +381,7 @@ viewFooter model =
         ]
     else
         [ Textfield.render
-            Mdl [0] model.mdl  -- MDL boilerplate
+            Mdl [2] model.mdl  -- MDL boilerplate
             [ Textfield.label "New task"
             , Textfield.floatingLabel
             , Textfield.text_
@@ -368,7 +391,7 @@ viewFooter model =
             ]
             []
         , Button.render
-            Mdl [1] model.mdl  -- MDL boilerplate
+            Mdl [3] model.mdl  -- MDL boilerplate
             [ Button.fab
             , Button.colored
             , Button.disabled |> Options.when (String.trim model.newTask == "")
