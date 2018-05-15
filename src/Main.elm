@@ -18,6 +18,8 @@ import Material.Menu as Menu
 import Material.Tabs as Tabs
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
+-- (internal modules)
+import StorageV0
 
 
 ---- PROGRAM ----
@@ -27,7 +29,7 @@ main : Program Never Model Msg
 main =
     Html.program
         { view = view
-        , init = (model, loadStorage ())
+        , init = (model, StorageV0.load ())
         , update = update
         -- , subscriptions = always Sub.none
         , subscriptions = subscriptions
@@ -77,20 +79,8 @@ model =
     , editTask = False
     , editTaskIdx = -1
     , editTaskText = ""
-    , selectedTab = 0
+    , selectedTab = 1
     }
-
-
----- PORTS ----
-
-type alias StorageV0 =
-    { checklist : Checklist
-    -- TODO(akavel): add newTask, editTask*
-    }
-
-port saveStorage : StorageV0 -> Cmd msg
-port loadStorage : () -> Cmd msg
-port storageContents : (Maybe StorageV0 -> msg) -> Sub msg
 
 
 ---- SUBSCRIPTIONS ----
@@ -100,7 +90,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Menu.subs Mdl model.mdl
-        , storageContents LoadedStorageV0
+        , StorageV0.loaded LoadedStorageV0
         ]
 
 
@@ -124,7 +114,7 @@ We need to be able to:
 - TODO: copy (duplicate) a list with a new name
 -}
 type Msg
-    = LoadedStorageV0 (Maybe StorageV0)
+    = LoadedStorageV0 (Maybe StorageV0.Model)
     | SelectTab Int
     | EditNewTask String
     | AppendTask
@@ -154,8 +144,8 @@ update msg model =
                     { model | newTask = "" }
                     |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
                 storageV0 =
-                    StorageV0 newModel.checklist
-            in ( newModel, saveStorage storageV0 )
+                    StorageV0.Model newModel.checklist
+            in ( newModel, StorageV0.save storageV0 )
         EditTask idx ->
             { model
                 | editTask = True
@@ -178,8 +168,8 @@ update msg model =
                             then Just { task | done = not task.done }
                             else Just task)
                 storageV0 =
-                    StorageV0 newModel.checklist
-            in ( newModel, saveStorage storageV0 )
+                    StorageV0.Model newModel.checklist
+            in ( newModel, StorageV0.save storageV0 )
         SaveEdit ->
             let
                 newModel =
@@ -188,8 +178,8 @@ update msg model =
                             then Just { task | text = model.editTaskText }
                             else Just task)
                 storageV0 =
-                    StorageV0 newModel.checklist
-            in ( newModel, saveStorage storageV0 )
+                    StorageV0.Model newModel.checklist
+            in ( newModel, StorageV0.save storageV0 )
         DeleteTask ->
             let
                 newModel =
@@ -198,8 +188,8 @@ update msg model =
                             then Nothing
                             else Just task)
                 storageV0 =
-                    StorageV0 newModel.checklist
-            in ( newModel, saveStorage storageV0 )
+                    StorageV0.Model newModel.checklist
+            in ( newModel, StorageV0.save storageV0 )
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
@@ -227,37 +217,48 @@ view model =
             [ Options.center ]
             [ Icon.i "event_available" ]
         ]
-        [ div [ class "app-layout" ]
-            [ header
-                [ classList
-                    [ ("app-header", True)
-                    -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                    , ("grayed-out", model.editTask)
-                    ]
-                ]
-                [ text model.checklist.name ]
-            , main_
-                [ classList
-                    [ ("app-main", True)
-                    -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                    , ("grayed-out", model.editTask)
-                    ]
-                ]
-                [ div
-                    [ classList
-                        [ ("edit-actions", True)
-                        , ("hidden-out", not model.editTask)
-                        ]
-                    ]
-                    (viewEditActions model)
-                , Lists.ul [ cs "app-checklist" ]
-                    (List.indexedMap viewTask model.checklist.tasks)
-                ]
-            , footer [ class "app-footer" ]
-                (viewFooter model)
-            ]
+        -- TODO(akavel): add support for swipe left/right to change active tab
+        [ case model.selectedTab of
+            0 -> viewChecklists model
+            _ -> viewTasks model
         ]
     |> Material.Scheme.top
+
+viewChecklists : Model -> Html Msg
+viewChecklists model =
+    text "hello checklists"
+
+viewTasks : Model -> Html Msg
+viewTasks model =
+    div [ class "app-layout" ]
+        [ header
+            [ classList
+                [ ("app-header", True)
+                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
+                , ("grayed-out", model.editTask)
+                ]
+            ]
+            [ text model.checklist.name ]
+        , main_
+            [ classList
+                [ ("app-main", True)
+                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
+                , ("grayed-out", model.editTask)
+                ]
+            ]
+            [ div
+                [ classList
+                    [ ("edit-actions", True)
+                    , ("hidden-out", not model.editTask)
+                    ]
+                ]
+                (viewEditActions model)
+            , Lists.ul [ cs "app-checklist" ]
+                (List.indexedMap viewTask model.checklist.tasks)
+            ]
+        , footer [ class "app-footer" ]
+            (viewFooter model)
+        ]
 
 viewTask : Int -> Task -> Html Msg
 viewTask idx submodel =
