@@ -15,7 +15,7 @@ registerServiceWorker();
 // TODO(akavel): use JSON + Decoder in Elm, or just pass raw values as
 // described in JS Interop section in the Elm Guide?
 
-app.ports.saveStorage.subscribe(function(storage) {
+app.ports.save.subscribe(function(storage) {
     localForage.setItem('dodo-storage', storage).then(function(value) {
         console.log("saved...");
         console.log(value);
@@ -26,10 +26,10 @@ app.ports.saveStorage.subscribe(function(storage) {
         console.log(err);
     });
 });
-app.ports.loadStorage.subscribe(function() {
+app.ports.load.subscribe(function() {
     localForage.getItem('dodo-storage').then(function(value) {
         console.log("loaded...");
-        app.ports.storageContents.send(value);
+        app.ports.loaded.send(value);
         console.log(value);
     }).catch(function(err) {
         console.log("load error!");

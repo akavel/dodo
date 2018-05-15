@@ -42,7 +42,7 @@ main =
 type alias Model =
     { text : String
     -- TODO(akavel): , checklists : List Checklist
-    , checklist : Checklist
+    , checklist : StorageV0.Checklist
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
@@ -51,28 +51,19 @@ type alias Model =
     , editTaskText : String
     , selectedTab : Int
     }
+
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
 
-type alias Checklist =
-    { name : String
-    , tasks : List Task
-    }
 tasks : Focus { r | tasks : a } a
 tasks = Focus.create .tasks (\f r -> { r | tasks = f r.tasks })
-
-type alias Task =
-    { text : String
-    , done : Bool
-    }
-
 
 model : Model
 model =
     { text = ""
-    , checklist = Checklist "New List 0"
-        [ Task "Foo" False
-        , Task "Bar" True
+    , checklist = StorageV0.Checklist "New List 0"
+        [ StorageV0.Task "Foo" False
+        , StorageV0.Task "Bar" True
         ]
     , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
@@ -131,7 +122,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LoadedStorageV0 Nothing ->
-            { model | checklist = Checklist "New List 0" [] } ! [Cmd.none]
+            { model | checklist = StorageV0.Checklist "New List 0" [] } ! [Cmd.none]
         LoadedStorageV0 (Just storageV0) ->
             { model | checklist = storageV0.checklist } ! [Cmd.none]
         SelectTab t ->
@@ -142,7 +133,7 @@ update msg model =
             let
                 newModel =
                     { model | newTask = "" }
-                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ Task model.newTask False ])
+                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV0.Task model.newTask False ])
                 storageV0 =
                     StorageV0.Model newModel.checklist
             in ( newModel, StorageV0.save storageV0 )
@@ -260,7 +251,7 @@ viewTasks model =
             (viewFooter model)
         ]
 
-viewTask : Int -> Task -> Html Msg
+viewTask : Int -> StorageV0.Task -> Html Msg
 viewTask idx submodel =
     let
         gray =
@@ -413,7 +404,7 @@ stopEdit model =
         | editTask = False
         , editTaskIdx = -1 }
 
-transformTasksWith : (Int -> Task -> Maybe Task) -> Model -> Model
+transformTasksWith : (Int -> StorageV0.Task -> Maybe StorageV0.Task) -> Model -> Model
 transformTasksWith taskModifier model =
     let
         listModifier tasks =
