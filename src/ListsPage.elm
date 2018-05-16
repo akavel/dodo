@@ -2,12 +2,12 @@ module ListsPage exposing (..)
 
 import Html exposing (Html, div, text, p, header, footer, main_)
 import Html.Attributes exposing (class, classList, style)
+import Html.Events
 -- debois/elm-mdl — Material Design Lite (MDL)
 import Material
 import Material.Scheme
 import Material.Options as Options exposing (cs)
-import Material.Button as Button
-import Material.Icon as Icon
+import Material.List as Lists
 -- (internal modules)
 import Slit
 import StorageV1
@@ -33,7 +33,7 @@ model =
 
 
 type Msg
-    = SwipeRight
+    = Select Int
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
@@ -48,8 +48,14 @@ update : Msg -> Model -> ( Model, Plea )
 update msg model =
     case msg of
 
-        SwipeRight ->
-            ( model, PleaseSwipeRight )
+        Select idx ->
+            let
+                newmodel =
+                    { model
+                        | lists = model.lists |> Slit.scrollTo idx
+                    }
+            in
+                ( newmodel, PleaseSwipeRight )
 
         Mdl msg_ ->
             Material.update Mdl msg_ model
@@ -73,10 +79,26 @@ view : Model -> Html Msg
 view model =
     div [ class "app-layout" ]
         [ text "hello lists"
-        , Button.render
-            Mdl [10, 1] model.mdl  -- MDL boilerplate
-            [ Options.onClick SwipeRight ]
-            [ Icon.i "chevron_right" ]
+        , Lists.ul []
+            (List.indexedMap viewItem <| Slit.toList model.lists)
         ]
     |> Material.Scheme.top
+
+
+viewItem : Int -> StorageV1.Checklist -> Html Msg
+viewItem idx submodel =
+    Lists.li
+        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
+        -- see: https://github.com/google/material-design-lite/pull/1785/files
+        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
+        , Options.attribute <| Html.Events.onClick (Select idx)
+        -- FIXME(akavel): why below doesn't work?
+        -- , Options.when (model.editTask && idx == model.editTaskIdx)
+        --     <| Color.background Color.primary
+        ]
+        [ Lists.content
+            [ Options.css "text-align" "left"
+            ]
+            [ text (submodel.name) ]
+        ]
 

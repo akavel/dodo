@@ -111,10 +111,12 @@ update msg model =
             let
                 (pagemodel, pagemsg) =
                     DefaultPage.update submsg submodel
+                newstorage =
+                    model.storage |> Slit.poke pagemodel.checklist
                 newpage =
                     case pagemsg of
                         DefaultPage.PleaseSwipeLeft ->
-                            OnListsPage { emptyListsPage | lists = model.storage }
+                            OnListsPage { emptyListsPage | lists = newstorage }
                         _ ->
                             OnDefaultPage pagemodel
                 newmodel =
@@ -122,7 +124,7 @@ update msg model =
                         | currentPage = newpage
                         -- Make sure any changes made on the page are reflected
                         -- in the high level data.
-                        , storage = model.storage |> Slit.poke pagemodel.checklist
+                        , storage = newstorage
                     }
                 newmsg =
                     case pagemsg of
@@ -153,11 +155,13 @@ update msg model =
             let
                 (pagemodel, pagemsg) =
                     ListsPage.update submsg submodel
+                newstorage =
+                    pagemodel.lists
                 newpage =
                     case pagemsg of
                         ListsPage.PleaseSwipeRight ->
                             OnDefaultPage
-                                { emptyDefaultPage | checklist = Slit.peek model.storage }
+                                { emptyDefaultPage | checklist = Slit.peek newstorage }
                         _ ->
                             OnListsPage pagemodel
                 newmodel =
@@ -165,7 +169,7 @@ update msg model =
                         | currentPage = newpage
                         -- Make sure any changes made on the page are reflected
                         -- in the high level data.
-                        , storage = pagemodel.lists
+                        , storage = newstorage
                     }
                 newmsg =
                     case pagemsg of
@@ -177,7 +181,10 @@ update msg model =
                                 , v1 = Just (StorageV1.toJS newmodel.storage)
                                 }
                         ListsPage.PleaseSwipeRight ->
-                            Cmd.none
+                            save
+                                { checklist = Nothing
+                                , v1 = Just (StorageV1.toJS newmodel.storage)
+                                }
             in
                 (newmodel, newmsg)
 

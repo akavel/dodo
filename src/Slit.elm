@@ -1,4 +1,4 @@
-module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll)
+module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll, scrollTo)
 
 type Slit a =
     Slit
@@ -79,13 +79,10 @@ scroll by (Slit slit) =
         (LT, [], _) ->
             -- cannot scroll anymore
             Slit slit
-    -- let
-    --     npre = List.length pre
-    --     npost = List.length post
-    -- in
-        -- [0, 1] 2 [3, 4]
-        -- if by >= npost then
-        --     Slit
-        --         { pre = slit.pre ++ (slit.mid :: (List.take (npost-1) slit.post
-        --         , mid = List.drop
 
+scrollTo : Int -> Slit a -> Slit a
+scrollTo idx slit =
+    let
+        old = position slit
+    in
+        scroll (idx - old) slit
