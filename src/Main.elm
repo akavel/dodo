@@ -2,7 +2,9 @@ port module Main exposing (..)
 
 import Html exposing (Html)
 -- (internal modules)
+import Slit exposing (Slit)
 import StorageV0
+import StorageV1
 import DefaultPage
 
 
@@ -26,7 +28,7 @@ main =
 type alias Model =
     { currentPage : CurrentPage
     -- TODO(akavel): promote data from subpage into main storage, and reverse
-    -- , storage : StorageV0.Model
+    , storage : StorageV1.Model
     }
 
 type CurrentPage
@@ -35,12 +37,15 @@ type CurrentPage
 model : Model
 model =
     { currentPage = OnDefaultPage DefaultPage.model
-    -- , storage =
-    --     { checklist = StorageV0.Checklist "New List 0"
-    --         [ StorageV0.Task "Foo" False
-    --         , StorageV0.Task "Bar" True
-    --         ]
-    --     }
+    , storage =
+        { checklists = Slit
+            []
+            (StorageV1.Checklist "New List 0"
+                [ StorageV1.Task "Foo" False
+                , StorageV1.Task "Bar" True
+                ])
+            [ StorageV1.Checklist "New List 1" [] ]
+        }
     }
 
 
