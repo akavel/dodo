@@ -85,15 +85,21 @@ type Msg
     | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+-- Plea is a request to parent view to execute the specified message
+type Plea
+    = Please (Cmd Msg)
+    | PleaseSwipeLeft
+    | PleaseSwipeRight
+
+update : Msg -> Model -> ( Model, Plea )
 update msg model =
     case msg of
         LoadedStorageV0 Nothing ->
-            { model | checklist = StorageV0.Checklist "New List 0" [] } ! [Cmd.none]
+            ( { model | checklist = StorageV0.Checklist "New List 0" [] }, Please Cmd.none )
         LoadedStorageV0 (Just storageV0) ->
-            { model | checklist = storageV0.checklist } ! [Cmd.none]
+            ( { model | checklist = storageV0.checklist }, Please Cmd.none )
         EditNewTask newText ->
-            { model | newTask = newText } ! [Cmd.none]
+            ( { model | newTask = newText }, Please Cmd.none )
         AppendTask ->
             let
                 newModel =
@@ -101,9 +107,9 @@ update msg model =
                     |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV0.Task model.newTask False ])
                 storageV0 =
                     StorageV0.Model newModel.checklist
-            in ( newModel, StorageV0.save storageV0 )
+            in ( newModel, Please (StorageV0.save storageV0) )
         EditTask idx ->
-            { model
+            ( { model
                 | editTask = True
                 , editTaskIdx = idx
                 , editTaskText =
@@ -111,11 +117,11 @@ update msg model =
                     |> nth idx
                     |> Maybe.map .text
                     |> Maybe.withDefault ""
-                } ! [Cmd.none]
+                }, Please Cmd.none )
         EditTaskText newText ->
-            { model | editTaskText = newText } ! [Cmd.none]
+            ( { model | editTaskText = newText }, Please Cmd.none )
         CancelEdit ->
-            ( model |> stopEdit, Cmd.none )
+            ( model |> stopEdit, Please Cmd.none )
         ToggleTask ->
             let
                 newModel =
@@ -125,7 +131,7 @@ update msg model =
                             else Just task)
                 storageV0 =
                     StorageV0.Model newModel.checklist
-            in ( newModel, StorageV0.save storageV0 )
+            in ( newModel, Please (StorageV0.save storageV0) )
         SaveEdit ->
             let
                 newModel =
@@ -135,7 +141,7 @@ update msg model =
                             else Just task)
                 storageV0 =
                     StorageV0.Model newModel.checklist
-            in ( newModel, StorageV0.save storageV0 )
+            in ( newModel, Please (StorageV0.save storageV0) )
         DeleteTask ->
             let
                 newModel =
@@ -145,9 +151,10 @@ update msg model =
                             else Just task)
                 storageV0 =
                     StorageV0.Model newModel.checklist
-            in ( newModel, StorageV0.save storageV0 )
+            in ( newModel, Please (StorageV0.save storageV0) )
         Mdl msg_ ->
             Material.update Mdl msg_ model
+            |> Tuple.mapSecond Please
 
 
 

@@ -82,9 +82,23 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case (msg, model.currentPage) of
         (DefaultPageMsg submsg, OnDefaultPage submodel) ->
-            DefaultPage.update submsg submodel
-            |> Tuple.mapFirst (\submodel -> { model | currentPage = OnDefaultPage submodel })
-            |> Tuple.mapSecond (Cmd.map DefaultPageMsg)
+            let
+                (pagemodel, pagemsg) =
+                    DefaultPage.update submsg submodel
+                newmodel =
+                    { model | currentPage = OnDefaultPage pagemodel }
+                newmsg =
+                    case pagemsg of
+                        DefaultPage.Please cmd ->
+                            Cmd.map DefaultPageMsg cmd
+                        DefaultPage.PleaseSwipeLeft ->
+                            Cmd.none
+                        DefaultPage.PleaseSwipeRight ->
+                            Cmd.none
+            in
+                (newmodel, newmsg)
+            -- |> Tuple.mapFirst (\submodel -> { model | currentPage = OnDefaultPage submodel })
+            -- |> Tuple.mapSecond (Cmd.map DefaultPageMsg)
 
 
 ---- VIEW ----
