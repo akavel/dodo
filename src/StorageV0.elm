@@ -1,7 +1,7 @@
 -- Module StorageV0 contains the core part of data model, which needs to be
 -- stored in persistent storage, so that it can be restored after the app is
 -- closed and reopened.
-port module StorageV0 exposing (..)
+module StorageV0 exposing (..)
 
 type alias Model =
     { checklist : Checklist
@@ -20,6 +20,6 @@ type alias Task =
     , done : Bool
     }
 
-port save : Model -> Cmd msg
-port load : () -> Cmd msg
-port loaded : (Maybe Model -> msg) -> Sub msg
+-- port save : Model -> Cmd msg
+-- port load : () -> Cmd msg
+-- port loaded : (Maybe Model -> msg) -> Sub msg

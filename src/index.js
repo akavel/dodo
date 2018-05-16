@@ -29,6 +29,10 @@ app.ports.save.subscribe(function(storage) {
 app.ports.load.subscribe(function() {
     localForage.getItem('dodo-storage').then(function(value) {
         console.log("loaded...");
+        // FIXME(akavel): how to solve upgrades purely on Elm side, without need for help in JS?
+        if (value.v1 === undefined) {
+            value.v1 = null;
+        }
         app.ports.loaded.send(value);
         console.log(value);
     }).catch(function(err) {

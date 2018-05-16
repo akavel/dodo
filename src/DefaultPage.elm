@@ -19,15 +19,14 @@ import Material.Tabs as Tabs
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
-import StorageV0
+import StorageV1
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    -- TODO(akavel): checklists : List Checklist
-    { checklist : StorageV0.Checklist
+    { checklist : StorageV1.Checklist
     , newTask : String
     , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
@@ -45,9 +44,9 @@ tasks = Focus.create .tasks (\f r -> { r | tasks = f r.tasks })
 
 model : Model
 model =
-    { checklist = StorageV0.Checklist "New List 0"
-        [ StorageV0.Task "Foo" False
-        , StorageV0.Task "Bar" True
+    { checklist = StorageV1.Checklist "New List 0"
+        [ StorageV1.Task "Foo" False
+        , StorageV1.Task "Bar" True
         ]
     , newTask = ""
     , mdl = Material.model  -- MDL boilerplate
@@ -65,7 +64,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Menu.subs Mdl model.mdl
-        , StorageV0.loaded LoadedStorageV0
+        -- , StorageV0.loaded LoadedStorageV0
         ]
 
 
@@ -73,8 +72,8 @@ subscriptions model =
 
 
 type Msg
-    = LoadedStorageV0 (Maybe StorageV0.Model)
-    | EditNewTask String
+    -- = LoadedStorageV0 (Maybe StorageV0.Model)
+    = EditNewTask String
     | AppendTask
     | EditTask Int
     | EditTaskText String
@@ -88,26 +87,25 @@ type Msg
 -- Plea is a request to parent view to execute the specified message
 type Plea
     = Please (Cmd Msg)
+    | PleaseSave
     | PleaseSwipeLeft
     | PleaseSwipeRight
 
 update : Msg -> Model -> ( Model, Plea )
 update msg model =
     case msg of
-        LoadedStorageV0 Nothing ->
-            ( { model | checklist = StorageV0.Checklist "New List 0" [] }, Please Cmd.none )
-        LoadedStorageV0 (Just storageV0) ->
-            ( { model | checklist = storageV0.checklist }, Please Cmd.none )
+        -- LoadedStorageV0 Nothing ->
+        --     ( { model | checklist = StorageV0.Checklist "New List 0" [] }, Please Cmd.none )
+        -- LoadedStorageV0 (Just storageV0) ->
+        --     ( { model | checklist = storageV0.checklist }, Please Cmd.none )
         EditNewTask newText ->
             ( { model | newTask = newText }, Please Cmd.none )
         AppendTask ->
             let
                 newModel =
                     { model | newTask = "" }
-                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV0.Task model.newTask False ])
-                storageV0 =
-                    StorageV0.Model newModel.checklist
-            in ( newModel, Please (StorageV0.save storageV0) )
+                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task model.newTask False ])
+            in ( newModel, PleaseSave )
         EditTask idx ->
             ( { model
                 | editTask = True
@@ -129,9 +127,7 @@ update msg model =
                         if idx == model.editTaskIdx
                             then Just { task | done = not task.done }
                             else Just task)
-                storageV0 =
-                    StorageV0.Model newModel.checklist
-            in ( newModel, Please (StorageV0.save storageV0) )
+            in ( newModel, PleaseSave )
         SaveEdit ->
             let
                 newModel =
@@ -139,9 +135,7 @@ update msg model =
                         if idx == model.editTaskIdx
                             then Just { task | text = model.editTaskText }
                             else Just task)
-                storageV0 =
-                    StorageV0.Model newModel.checklist
-            in ( newModel, Please (StorageV0.save storageV0) )
+            in ( newModel, PleaseSave )
         DeleteTask ->
             let
                 newModel =
@@ -149,9 +143,7 @@ update msg model =
                         if idx == model.editTaskIdx
                             then Nothing
                             else Just task)
-                storageV0 =
-                    StorageV0.Model newModel.checklist
-            in ( newModel, Please (StorageV0.save storageV0) )
+            in ( newModel, PleaseSave )
         Mdl msg_ ->
             Material.update Mdl msg_ model
             |> Tuple.mapSecond Please
@@ -196,7 +188,7 @@ view model =
         ]
     |> Material.Scheme.top
 
-viewTask : Int -> StorageV0.Task -> Html Msg
+viewTask : Int -> StorageV1.Task -> Html Msg
 viewTask idx submodel =
     let
         gray =
@@ -351,7 +343,7 @@ stopEdit model =
         | editTask = False
         , editTaskIdx = -1 }
 
-transformTasksWith : (Int -> StorageV0.Task -> Maybe StorageV0.Task) -> Model -> Model
+transformTasksWith : (Int -> StorageV1.Task -> Maybe StorageV1.Task) -> Model -> Model
 transformTasksWith taskModifier model =
     let
         listModifier tasks =

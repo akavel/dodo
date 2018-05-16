@@ -4,6 +4,7 @@
 port module StorageV1 exposing (..)
 
 import Slit exposing (Slit)
+import StorageV0
 
 type alias Model =
     Slit Checklist
@@ -18,6 +19,10 @@ type alias Task =
     , done : Bool
     }
 
+empty : Model
+empty =
+    Slit.fromElement <| Checklist "New List 0" []
+
 type alias JS =
     (Int, List Checklist)
 
@@ -28,4 +33,8 @@ toJS model =
 fromJS : JS -> Maybe Model
 fromJS (pos, list) =
     Slit.fromList list |> Maybe.map (Slit.scroll pos)
+
+fromV0 : StorageV0.Model -> Model
+fromV0 v0 =
+    Slit.fromElement v0.checklist
 

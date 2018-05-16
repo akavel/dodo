@@ -15,7 +15,7 @@ main : Program Never Model Msg
 main =
     Html.program
         { view = view
-        , init = (model, StorageV0.load ())
+        , init = (model, load ())
         , update = update
         -- , subscriptions = always Sub.none
         , subscriptions = subscriptions
@@ -37,23 +37,8 @@ type CurrentPage
 model : Model
 model =
     { currentPage = OnDefaultPage DefaultPage.model
-    , storage =
-        Slit.fromElement <| StorageV1.Checklist "New List 0"
-            [ StorageV1.Task "Foo" False
-            , StorageV1.Task "Bar" True
-            ]
+    , storage = StorageV1.empty
     }
-
-
----- SUBSCRIPTIONS ----
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    case model.currentPage of
-        OnDefaultPage submodel ->
-            DefaultPage.subscriptions submodel
-            |> Sub.map DefaultPageMsg
 
 
 ---- UPDATE ----
@@ -77,11 +62,44 @@ We need to be able to:
 -}
 type Msg
     = DefaultPageMsg DefaultPage.Msg
+    | Loaded (Maybe Storage)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case (msg, model.currentPage) of
+        (Loaded Nothing, _) ->
+            update (Loaded (Just emptyStorage)) model
+        (Loaded (Just json), _) ->
+            let
+                -- Try to decode storage.v1;...
+                newstorage =
+                    json.v1
+                    -- TODO(akavel): somehow handle errors in storage decoding
+                    |> Maybe.andThen StorageV1.fromJS
+                    -- ...if failed, try to upgrade from v0;...
+                    |> Maybe.withDefault fromV0
+                fromV0 =
+                    json.checklist
+                    |> Maybe.map StorageV0.Model
+                    |> Maybe.map StorageV1.fromV0
+                    -- ...if upgrade failed, fall back to default empty contents.
+                    |> Maybe.withDefault StorageV1.empty
+                -- Inject the loaded data to DefaultPage's model...
+                submodel = DefaultPage.model
+                pagemodel =
+                    { submodel
+                        | checklist = Slit.peek newstorage
+                    }
+                -- ...and to the top-level model. Also, open the default page.
+                newmodel =
+                    { currentPage = OnDefaultPage pagemodel
+                    , storage = newstorage
+                    }
+            in
+                -- Finally, save the data in upgraded format.
+                ( newmodel, saveV1 newmodel.storage )
+
         -- Handle DefaultPage actions
         (DefaultPageMsg submsg, OnDefaultPage submodel) ->
             let
@@ -98,6 +116,11 @@ update msg model =
                     case pagemsg of
                         DefaultPage.Please cmd ->
                             Cmd.map DefaultPageMsg cmd
+                        DefaultPage.PleaseSave ->
+                            save
+                                { checklist = Nothing
+                                , v1 = Just (StorageV1.toJS newmodel.storage)
+                                }
                         DefaultPage.PleaseSwipeLeft ->
                             Cmd.none
                         DefaultPage.PleaseSwipeRight ->
@@ -106,12 +129,29 @@ update msg model =
                 (newmodel, newmsg)
 
 
+---- SUBSCRIPTIONS ----
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    let
+        pagesubs =
+            case model.currentPage of
+                OnDefaultPage submodel ->
+                    DefaultPage.subscriptions submodel
+                    |> Sub.map DefaultPageMsg
+    in
+        Sub.batch
+            [ pagesubs
+            , loaded Loaded
+            ]
+
+
 ---- PORTS ----
 
 
--- NOTE: We abuse the "Ports ignore extra, unexpected fields" [1] feature to
--- allow easy upgrading path for the storage.
---  [1]: https://medium.com/@_rchaves_/elm-how-to-use-decoders-for-ports-how-to-not-use-decoders-for-json-a4f95b51473a
+-- FIXME(akavel): try to use string encoding & decoding, to solve upgrades
+-- purely in Elm, without need for help on JS side
 type alias Storage =
     { -- Backwards compatibility with data saved via StorageV0
       checklist : Maybe StorageV0.Checklist
@@ -122,6 +162,20 @@ type alias Storage =
 port save : Storage -> Cmd msg
 port load : () -> Cmd msg
 port loaded : (Maybe Storage -> msg) -> Sub msg
+
+emptyStorage : Storage
+emptyStorage =
+    { checklist = Nothing
+    , v1 = Just <| StorageV1.toJS StorageV1.empty
+    }
+
+saveV1 : StorageV1.Model -> Cmd msg
+saveV1 v1 =
+    save
+        { checklist = Nothing
+        , v1 = Just <| StorageV1.toJS v1
+        }
+
 
 
 ---- VIEW ----
