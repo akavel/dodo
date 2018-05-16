@@ -82,15 +82,16 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case (msg, model.currentPage) of
+        -- Handle DefaultPage actions
         (DefaultPageMsg submsg, OnDefaultPage submodel) ->
             let
-                freshSubmodel =
-                    { submodel | checklist = Slit.peek model.storage }
                 (pagemodel, pagemsg) =
-                    DefaultPage.update submsg freshSubmodel
+                    DefaultPage.update submsg submodel
                 newmodel =
                     { model
                         | currentPage = OnDefaultPage pagemodel
+                        -- Make sure any changes made on the page are reflected
+                        -- in the high level data.
                         , storage = model.storage |> Slit.poke pagemodel.checklist
                     }
                 newmsg =
@@ -103,8 +104,6 @@ update msg model =
                             Cmd.none
             in
                 (newmodel, newmsg)
-            -- |> Tuple.mapFirst (\submodel -> { model | currentPage = OnDefaultPage submodel })
-            -- |> Tuple.mapSecond (Cmd.map DefaultPageMsg)
 
 
 ---- VIEW ----
