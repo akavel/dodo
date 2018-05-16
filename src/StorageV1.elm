@@ -18,3 +18,14 @@ type alias Task =
     , done : Bool
     }
 
+type alias JS =
+    (Int, List Checklist)
+
+toJS : Model -> JS
+toJS model =
+    (Slit.position model, Slit.toList model)
+
+fromJS : JS -> Maybe Model
+fromJS (pos, list) =
+    Slit.fromList list |> Maybe.map (Slit.scroll pos)
+

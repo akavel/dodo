@@ -38,7 +38,7 @@ model : Model
 model =
     { currentPage = OnDefaultPage DefaultPage.model
     , storage =
-        Slit.base <| StorageV1.Checklist "New List 0"
+        Slit.fromElement <| StorageV1.Checklist "New List 0"
             [ StorageV1.Task "Foo" False
             , StorageV1.Task "Bar" True
             ]
@@ -104,6 +104,24 @@ update msg model =
                             Cmd.none
             in
                 (newmodel, newmsg)
+
+
+---- PORTS ----
+
+
+-- NOTE: We abuse the "Ports ignore extra, unexpected fields" [1] feature to
+-- allow easy upgrading path for the storage.
+--  [1]: https://medium.com/@_rchaves_/elm-how-to-use-decoders-for-ports-how-to-not-use-decoders-for-json-a4f95b51473a
+type alias Storage =
+    { -- Backwards compatibility with data saved via StorageV0
+      checklist : Maybe StorageV0.Checklist
+      -- StorageV1
+    , v1 : Maybe StorageV1.JS
+    }
+
+port save : Storage -> Cmd msg
+port load : () -> Cmd msg
+port loaded : (Maybe Storage -> msg) -> Sub msg
 
 
 ---- VIEW ----
