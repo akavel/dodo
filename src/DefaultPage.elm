@@ -15,7 +15,7 @@ import Material.Button as Button
 import Material.Icon as Icon
 import Material.List as Lists
 import Material.Menu as Menu
-import Material.Tabs as Tabs
+import Material.Typography as Typo
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -57,23 +57,13 @@ model =
     }
 
 
----- SUBSCRIPTIONS ----
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch
-        [ Menu.subs Mdl model.mdl
-        -- , StorageV0.loaded LoadedStorageV0
-        ]
-
-
 ---- UPDATE ----
 
 
 type Msg
-    -- = LoadedStorageV0 (Maybe StorageV0.Model)
-    = EditNewTask String
+    = SwipeLeft
+    | SwipeRight
+    | EditNewTask String
     | AppendTask
     | EditTask Int
     | EditTaskText String
@@ -94,10 +84,10 @@ type Plea
 update : Msg -> Model -> ( Model, Plea )
 update msg model =
     case msg of
-        -- LoadedStorageV0 Nothing ->
-        --     ( { model | checklist = StorageV0.Checklist "New List 0" [] }, Please Cmd.none )
-        -- LoadedStorageV0 (Just storageV0) ->
-        --     ( { model | checklist = storageV0.checklist }, Please Cmd.none )
+        SwipeLeft ->
+            ( model, PleaseSwipeLeft )
+        SwipeRight ->
+            ( model, PleaseSwipeRight )
         EditNewTask newText ->
             ( { model | newTask = newText }, Please Cmd.none )
         AppendTask ->
@@ -149,6 +139,13 @@ update msg model =
             |> Tuple.mapSecond Please
 
 
+---- SUBSCRIPTIONS ----
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Menu.subs Mdl model.mdl
+
 
 ---- VIEW ----
 
@@ -165,7 +162,19 @@ view model =
                 , ("grayed-out", model.editTask)
                 ]
             ]
-            [ text model.checklist.name ]
+            [ Button.render
+                Mdl [10, 0] model.mdl  -- MDL boilerplate
+                [ Options.onClick SwipeLeft ]
+                [ Icon.i "chevron_left" ]
+            , Options.styled p
+                [ Typo.title ]
+                [ text model.checklist.name ]
+            , Button.render
+                Mdl [10, 1] model.mdl  -- MDL boilerplate
+                [ Options.onClick SwipeRight ]
+                [ Icon.i "chevron_right" ]
+            ]
+            -- [ text model.checklist.name ]
         , main_
             [ classList
                 [ ("app-main", True)

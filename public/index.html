@@ -29,19 +29,6 @@ html, body {
     margin: 0; padding: 0;
 }
 
-/* TODO(akavel): the selector should use some fixed #id instead of class */
-.mdl-tabs {
-    height: 100vh;
-    display: flex;
-}
-.mdl-tabs > .is-active {
-    height: 100vh;
-    /* Mostly NOP, but force child position:absolute elements to be contained
-       see: https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#Identifying_the_containing_block
-     */
-    transform: translate(0,0);
-}
-
 .app-layout {
     display: flex;
     flex-direction: column;
@@ -51,6 +38,13 @@ html, body {
 }
 .app-header {
     border-bottom: 1px solid rgba(0,0,0, 0.12);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.app-header p {
+    flex: 1;
+    margin: 0;
 }
 .app-main {
     height: 100vh;

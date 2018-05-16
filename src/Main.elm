@@ -6,6 +6,7 @@ import Slit exposing (Slit)
 import StorageV0
 import StorageV1
 import DefaultPage
+import ListsPage
 
 
 ---- PROGRAM ----
@@ -33,12 +34,17 @@ type alias Model =
 
 type CurrentPage
     = OnDefaultPage DefaultPage.Model
+    | OnListsPage ListsPage.Model
 
 model : Model
 model =
-    { currentPage = OnDefaultPage DefaultPage.model
+    { currentPage = OnDefaultPage emptyDefaultPage
     , storage = StorageV1.empty
     }
+
+-- TODO(akavel): why { DefaultPage.model | ... } is not allowed?
+emptyDefaultPage = DefaultPage.model
+emptyListsPage = ListsPage.model
 
 
 ---- UPDATE ----
@@ -61,8 +67,9 @@ We need to be able to:
 - TODO: move items around the list
 -}
 type Msg
-    = DefaultPageMsg DefaultPage.Msg
-    | Loaded (Maybe Storage)
+    = Loaded (Maybe Storage)
+    | DefaultPageMsg DefaultPage.Msg
+    | ListsPageMsg ListsPage.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -86,9 +93,8 @@ update msg model =
                     -- ...if upgrade failed, fall back to default empty contents.
                     |> Maybe.withDefault StorageV1.empty
                 -- Inject the loaded data to DefaultPage's model...
-                submodel = DefaultPage.model
                 pagemodel =
-                    { submodel
+                    { emptyDefaultPage
                         | checklist = Slit.peek newstorage
                     }
                 -- ...and to the top-level model. Also, open the default page.
@@ -105,9 +111,15 @@ update msg model =
             let
                 (pagemodel, pagemsg) =
                     DefaultPage.update submsg submodel
+                newpage =
+                    case pagemsg of
+                        DefaultPage.PleaseSwipeLeft ->
+                            OnListsPage { emptyListsPage | lists = model.storage }
+                        _ ->
+                            OnDefaultPage pagemodel
                 newmodel =
                     { model
-                        | currentPage = OnDefaultPage pagemodel
+                        | currentPage = newpage
                         -- Make sure any changes made on the page are reflected
                         -- in the high level data.
                         , storage = model.storage |> Slit.poke pagemodel.checklist
@@ -128,6 +140,57 @@ update msg model =
             in
                 (newmodel, newmsg)
 
+        -- TODO(akavel): how to properly handle combination like below?
+        (DefaultPageMsg submsg, _) ->
+            let
+                submodel =
+                    { emptyDefaultPage
+                        | checklist = Slit.peek model.storage }
+            in
+                update msg { model | currentPage = OnDefaultPage submodel }
+
+        (ListsPageMsg submsg, OnListsPage submodel) ->
+            let
+                (pagemodel, pagemsg) =
+                    ListsPage.update submsg submodel
+                newpage =
+                    case pagemsg of
+                        ListsPage.PleaseSwipeRight ->
+                            OnDefaultPage
+                                { emptyDefaultPage | checklist = Slit.peek model.storage }
+                        _ ->
+                            OnListsPage pagemodel
+                newmodel =
+                    { model
+                        | currentPage = newpage
+                        -- Make sure any changes made on the page are reflected
+                        -- in the high level data.
+                        , storage = pagemodel.lists
+                    }
+                newmsg =
+                    case pagemsg of
+                        ListsPage.Please cmd ->
+                            Cmd.map ListsPageMsg cmd
+                        ListsPage.PleaseSave ->
+                            save
+                                { checklist = Nothing
+                                , v1 = Just (StorageV1.toJS newmodel.storage)
+                                }
+                        ListsPage.PleaseSwipeRight ->
+                            Cmd.none
+            in
+                (newmodel, newmsg)
+
+        -- TODO(akavel): how to properly handle combination like below?
+        (ListsPageMsg submsg, _) ->
+            let
+                submodel =
+                    { emptyListsPage
+                        | lists = model.storage }
+            in
+                update msg { model | currentPage = OnListsPage submodel }
+
+
 
 ---- SUBSCRIPTIONS ----
 
@@ -140,6 +203,9 @@ subscriptions model =
                 OnDefaultPage submodel ->
                     DefaultPage.subscriptions submodel
                     |> Sub.map DefaultPageMsg
+                OnListsPage submodel ->
+                    ListsPage.subscriptions submodel
+                    |> Sub.map ListsPageMsg
     in
         Sub.batch
             [ pagesubs
@@ -187,4 +253,7 @@ view model =
         OnDefaultPage submodel ->
             DefaultPage.view submodel
             |> Html.map DefaultPageMsg
+        OnListsPage submodel ->
+            ListsPage.view submodel
+            |> Html.map ListsPageMsg
 
