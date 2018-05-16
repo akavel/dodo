@@ -6,8 +6,7 @@ port module StorageV1 exposing (..)
 import Slit exposing (Slit)
 
 type alias Model =
-    { checklists : Slit Checklist
-    }
+    Slit Checklist
 
 type alias Checklist =
     { name : String

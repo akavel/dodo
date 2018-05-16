@@ -38,14 +38,10 @@ model : Model
 model =
     { currentPage = OnDefaultPage DefaultPage.model
     , storage =
-        { checklists = Slit
-            []
-            (StorageV1.Checklist "New List 0"
-                [ StorageV1.Task "Foo" False
-                , StorageV1.Task "Bar" True
-                ])
-            [ StorageV1.Checklist "New List 1" [] ]
-        }
+        Slit.base <| StorageV1.Checklist "New List 0"
+            [ StorageV1.Task "Foo" False
+            , StorageV1.Task "Bar" True
+            ]
     }
 
 
@@ -88,10 +84,15 @@ update msg model =
     case (msg, model.currentPage) of
         (DefaultPageMsg submsg, OnDefaultPage submodel) ->
             let
+                freshSubmodel =
+                    { submodel | checklist = Slit.peek model.storage }
                 (pagemodel, pagemsg) =
-                    DefaultPage.update submsg submodel
+                    DefaultPage.update submsg freshSubmodel
                 newmodel =
-                    { model | currentPage = OnDefaultPage pagemodel }
+                    { model
+                        | currentPage = OnDefaultPage pagemodel
+                        , storage = model.storage |> Slit.poke pagemodel.checklist
+                    }
                 newmsg =
                     case pagemsg of
                         DefaultPage.Please cmd ->
