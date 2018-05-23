@@ -52,14 +52,14 @@ emptyListsPage = ListsPage.model
 
 {-
 We need to be able to:
-- (done) add new items to the current list
-- (done) remove item from current list
-- (done) disable/reenable item from current list (toggle)
-- (done) edit an item on the list
-- (done) save items on disk and load them on app start
-- TODO: show names of all lists
-- TODO: change the current list to a different one
+- *done!* add new items to the current list
+- *done!* remove item from current list
+- *done!* disable/reenable item from current list (toggle)
+- *done!* edit an item on the list
+- *done!* save items on disk and load them on app start
+- *done!* show names of all lists
 - TODO: add new list
+- TODO: change the current list to a different one
 - TODO: delete a list
 - TODO: rename current list
 - TODO: copy (duplicate) a list with a new name
