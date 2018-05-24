@@ -1,21 +1,26 @@
 module DefaultPage exposing (..)
 
-import Html exposing (Html, div, text, p, header, footer, main_)
-import Html.Attributes exposing (class, classList, style)
-import Html.Events
+import Html exposing (Html)
+-- import Html exposing (Html, div, text, p, header, footer, main_)
+-- import Html.Attributes exposing (class, classList, style)
+-- import Html.Events
 import String
+-- mdgriffith/style-elements — easier building of HTML+CSS layouts
+import Style exposing (styleSheet)
+import Element exposing (..)
+import Element.Attributes exposing (..)
 -- debois/elm-mdl — Material Design Lite (MDL)
-import Material
-import Material.Scheme
-import Material.Elevation as Elevation
-import Material.Options as Options exposing (cs)
-import Material.Color as Color
-import Material.Textfield as Textfield
-import Material.Button as Button
-import Material.Icon as Icon
-import Material.List as Lists
-import Material.Menu as Menu
-import Material.Typography as Typo
+-- import Material
+-- import Material.Scheme
+-- import Material.Elevation as Elevation
+-- import Material.Options as Options exposing (cs)
+-- import Material.Color as Color
+-- import Material.Textfield as Textfield
+-- import Material.Button as Button
+-- import Material.Icon as Icon
+-- import Material.List as Lists
+-- import Material.Menu as Menu
+-- import Material.Typography as Typo
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -28,7 +33,7 @@ import StorageV1
 type alias Model =
     { checklist : StorageV1.Checklist
     , newTask : String
-    , mdl : Material.Model  -- MDL boilerplate
+    -- , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
     , editTask : Bool
     , editTaskIdx : Int
@@ -49,7 +54,7 @@ model =
         , StorageV1.Task "Bar" True
         ]
     , newTask = ""
-    , mdl = Material.model  -- MDL boilerplate
+    -- , mdl = Material.model  -- MDL boilerplate
     , editTask = False
     , editTaskIdx = -1
     , editTaskText = ""
@@ -71,7 +76,7 @@ type Msg
     | ToggleTask
     | SaveEdit
     | DeleteTask
-    | Mdl (Material.Msg Msg)  -- MDL boilerplate
+    -- | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -134,9 +139,9 @@ update msg model =
                             then Nothing
                             else Just task)
             in ( newModel, PleaseSave )
-        Mdl msg_ ->
-            Material.update Mdl msg_ model
-            |> Tuple.mapSecond Please
+        -- Mdl msg_ ->
+        --     Material.update Mdl msg_ model
+        --     |> Tuple.mapSecond Please
 
 
 ---- SUBSCRIPTIONS ----
@@ -144,12 +149,66 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Menu.subs Mdl model.mdl
+    -- Menu.subs Mdl model.mdl
+    Sub.none
+
+
+---- STYLES ----
+
+
+type AppStyles
+    = Screen
+    | Navbar
+    | TodoList
+    | Footer
+
+
+stylesheet =
+    styleSheet []
 
 
 ---- VIEW ----
 
 
+view : Model -> Html Msg
+view model =
+    viewport stylesheet <|
+        column Screen
+            [ height fill ]
+            [ el Navbar [] (text model.checklist.name)
+            , el TodoList [height fill] (text "TODO the lsit")
+            , el Footer [] (text "TODO clickabilly new item")
+            ]
+        -- grid Screen [ height fill ]
+        --     { columns = [ fill ]
+        --     , rows =
+        --         [ content
+        --         , fill
+        --         , content
+        --         ]
+        --     , cells =
+        --         [ cellAt 0 0 <|
+        --             text model.checklist.name
+        --         , cellAt 0 1 <|
+        --             text "TODO the list"
+        --         , cellAt 0 2 <|
+        --             text "TODO clickabilly new list item"
+        --         ]
+        --     }
+        -- column Screen []
+        --     [ text model.checklist.name
+        --     , 
+
+cellAt : Int -> Int -> Element style variation msg -> OnGrid (Element style variation msg)
+cellAt x y elem =
+    Element.cell
+        { start = (x, y)
+        , width = 1
+        , height = 1
+        , content = elem
+        }
+
+{--
 type alias Mdl = Material.Model
 
 view : Model -> Html Msg
@@ -337,6 +396,7 @@ viewFooter model =
             ]
             [ Icon.i "add" ]
         ]
+--}
 
 
 ---- UTILS ----

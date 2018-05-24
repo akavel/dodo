@@ -19,83 +19,11 @@
     <!-- end MDL styles -->
     <title>DODO app</title>
 <style>
-* { margin: 0; padding: 0; }
-html, body {
+html, body, #root, .style-elements {
     height: 100%;
     min-height: 100%;
     width: 100%;
     min-width: 100%;
-    overflow: hidden;
-    margin: 0; padding: 0;
-}
-
-.app-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    --height: 100%;
-    margin: 0; padding: 0;
-}
-.app-header {
-    border-bottom: 1px solid rgba(0,0,0, 0.12);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-.app-header p {
-    flex: 1;
-    margin: 0;
-}
-.app-main {
-    height: 100vh;
-    overflow-y: hidden;
-    /* FIXME(akavel): verify if this follows Material Design guidelines;
-       maybe instead color the background of the header & footer?
-     */
-    border-bottom: 1px solid rgba(0,0,0, 0.12);
-}
-.app-checklist {
-    height: 100vh;
-    overflow-y: scroll;
-}
-.app-footer {
-}
-
-.edit-actions {
-    position: absolute;
-    right: 0; bottom: 0; left: 0;
-    z-index: 2;
-    padding: 1em 1em;
-    /* border: 3px solid blue; */
-    /* justify-content: space-between; */
-    /* justify-content: space-evenly; */
-    /* justify-content: stretch; */
-    display: flex;
-}
-/* .edit-actions > button:first-child { */
-/*     margin-right: auto; */
-/* } */
-/* .edit-actions > button:first-child:after { */
-/* } */
-
-.grayed-out {
-    /* Mostly NOP, but force child position:absolute elements to be contained
-       see: https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#Identifying_the_containing_block
-     */
-    transform: translate(0,0);
-}
-.grayed-out:after {
-    content: "";
-    display: block;
-    position: fixed;
-    /* position: absolute; */
-    z-index: 1;
-    top: 0; right: 0; bottom: 0; left: 0;
-    background-color: rgba(85%,85%,85%, 75%);
-}
-
-.hidden-out {
-    display: none;
 }
 </style>
 
