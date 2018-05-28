@@ -174,9 +174,35 @@ view : Model -> Html Msg
 view model =
     viewport stylesheet <|
         column Screen
-            [ height fill ]
+            [ height fill
+            , width fill
+            ]
             [ el Navbar [] (text model.checklist.name)
-            , el TodoList [height fill] (text "TODO the lsit")
+            , column TodoList
+                [ height fill
+                , width fill
+                , spacing 20
+                , yScrollbar
+                ]
+                [ text "hello 1"
+                , text "hello 2"
+                , text "hello 3"
+                , text "hello 4"
+                , text "hello 5"
+                , text "hello 6"
+                , text "hello 7"
+                , text "hello 8"
+                , text "hello 9"
+                , text "hello 10"
+                , text "hello 11"
+                , text "hello 12"
+                , text "hello 13"
+                , text "hello 14"
+                , text "hello 15"
+                , text "hello 16"
+                , text "hello 17"
+                ]
+            -- , el TodoList [height fill] (text "TODO the lsit")
             , el Footer [] (text "TODO clickabilly new item")
             ]
         -- grid Screen [ height fill ]
