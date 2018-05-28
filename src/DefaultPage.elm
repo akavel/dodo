@@ -11,6 +11,7 @@ import Style.Color as Color
 import Color exposing (..)
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Element.Input as Input
 -- debois/elm-mdl — Material Design Lite (MDL)
 -- import Material
 -- import Material.Scheme
@@ -55,6 +56,8 @@ model =
         [ StorageV1.Task "Foo" False
         , StorageV1.Task "Bar" True
         ]
+    -- TODO(akavel): newTask & editTask are not needed if we treat 'editTaskIdx
+    -- == len(checklist)' as editing of new task
     , newTask = ""
     -- , mdl = Material.model  -- MDL boilerplate
     , editTask = False
@@ -161,9 +164,10 @@ subscriptions model =
 type AppStyles
     = Screen
     | Navbar
-    | TodoList
-    | Item Bool
+    | Group      -- a group (list) of items
+    | Item Bool  -- True for pending, False for done
     | Footer
+    | PLAIN
 
 
 stylesheet =
@@ -184,19 +188,38 @@ view model =
             , width fill
             ]
             [ el Navbar [] (text model.checklist.name)
-            , column TodoList
+            , column Group
                 [ height fill
                 , width fill
                 , spacing 20
                 , yScrollbar
                 ]
                 (List.indexedMap viewTask model.checklist.tasks)
-            , el Footer [] (text "TODO clickabilly new item")
+            , viewFooter model
+            -- , el Footer [] (text "TODO clickabilly new item")
             ]
 
 viewTask : Int -> StorageV1.Task -> Element AppStyles variation msg
 viewTask idx submodel =
     paragraph (Item <| not submodel.done) [] [text submodel.text]
+
+viewFooter : Model -> Element AppStyles variation Msg
+viewFooter model =
+    if model.editTask
+    then
+        Input.text PLAIN []
+            { onChange = EditTaskText
+            , value = model.editTaskText
+            , label = Input.labelAbove <| text "Edit task"
+            , options = []
+            }
+    else
+        Input.text PLAIN []
+            { onChange = EditNewTask
+            , value = model.newTask
+            , label = Input.labelAbove <| text "New task"
+            , options = []
+            }
 
 {--
 type alias Mdl = Material.Model
