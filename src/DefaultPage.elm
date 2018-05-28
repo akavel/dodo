@@ -1,6 +1,7 @@
 module DefaultPage exposing (..)
 
 import Html exposing (Html)
+import Html.Attributes
 -- import Html exposing (Html, div, text, p, header, footer, main_)
 -- import Html.Attributes exposing (class, classList, style)
 -- import Html.Events
@@ -248,8 +249,19 @@ viewFooter model =
                     [ Input.textKey <| toString model.newTaskXXX ]
                 }
             , button PLAIN
-                [ Event.onClick AppendTask ]
-                ( italic "add" )
+                [ Event.onClick AppendTask
+                , classList
+                    [ ("mdl-button", True)
+                    , ("mdl-js-button", True)
+                    , ("mdl-button--fab", True)
+                    , ("mdl-button--colored", True)
+                    , ("mdl-js-ripple-effect", True)
+                    ]
+                , attribute "disabled" "disabled"
+                    |> attrWhen (String.trim model.newTask == "")
+                ]
+                -- ( italic "add" )
+                ( icon "add" )
             ]
 
 {--
@@ -456,6 +468,14 @@ attrWhen condition attr =
     if condition
     then attr
     else inlineStyle []
+
+
+icon : String -> Element Styles Variations Msg
+icon name =
+    -- TODO(akavel): check if `el (italic ...)` would work
+    html <| Html.i
+        [ Html.Attributes.class "material-icons" ]
+        [ Html.text name ]
 
 
 stopEdit : Model -> Model
