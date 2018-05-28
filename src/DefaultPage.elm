@@ -6,11 +6,13 @@ import Html exposing (Html)
 -- import Html.Events
 import String
 -- mdgriffith/style-elements — easier building of HTML+CSS layouts
-import Style exposing (styleSheet, style)
+import Style exposing (styleSheet, style, variation)
 import Style.Color as Color
+import Style.Filter as Filter
 import Color exposing (..)
 import Element exposing (..)
 import Element.Attributes exposing (..)
+import Element.Events as Event
 import Element.Input as Input
 -- debois/elm-mdl — Material Design Lite (MDL)
 -- import Material
@@ -161,7 +163,7 @@ subscriptions model =
 ---- STYLES ----
 
 
-type AppStyles
+type Styles
     = Screen
     | Navbar
     | Group      -- a group (list) of items
@@ -170,12 +172,28 @@ type AppStyles
     | PLAIN
 
 
+type Variations
+    = Disabled
+
+
 stylesheet =
     styleSheet
-        [ style (Item False)
-            [ Color.text gray ]
+        [ style (Item True)
+            [ variation Disabled styleDisabled
+            ]
+        , style (Item False)
+            [ Color.text gray
+            , variation Disabled styleDisabled
+            ]
         ]
 
+
+styleDisabled =
+    -- [ Color.background lightGray ]
+    -- [ Filter.blur 0.5 ]
+    [ Filter.opacity 25.0 ]
+    -- [ Filter.blur 10.5, Filter.invert 10.5 ]
+    -- [ Style.prop "filter" "blur(5px) invert(25%)" ]
 
 ---- VIEW ----
 
@@ -194,16 +212,19 @@ view model =
                 , spacing 20
                 , yScrollbar
                 ]
-                (List.indexedMap viewTask model.checklist.tasks)
+                (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
-            -- , el Footer [] (text "TODO clickabilly new item")
             ]
 
-viewTask : Int -> StorageV1.Task -> Element AppStyles variation msg
-viewTask idx submodel =
-    paragraph (Item <| not submodel.done) [] [text submodel.text]
+viewTask : Model -> Int -> StorageV1.Task -> Element Styles Variations Msg
+viewTask model idx submodel =
+    paragraph (Item <| not submodel.done)
+        [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
+        , vary Disabled model.editTask
+        ]
+        [ text submodel.text ]
 
-viewFooter : Model -> Element AppStyles variation Msg
+viewFooter : Model -> Element Styles Variations Msg
 viewFooter model =
     if model.editTask
     then
@@ -418,6 +439,14 @@ viewFooter model =
 nth : Int -> List a -> Maybe a
 nth n list =
     List.head <| List.drop n list
+
+
+attrWhen : Bool -> Attribute variation msg -> Attribute variation msg
+attrWhen condition attr =
+    if condition
+    then attr
+    else inlineStyle []
+
 
 stopEdit : Model -> Model
 stopEdit model =
