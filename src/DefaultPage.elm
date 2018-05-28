@@ -38,6 +38,7 @@ import StorageV1
 type alias Model =
     { checklist : StorageV1.Checklist
     , newTask : String
+    , newTaskXXX : Int   -- HACK required by https://github.com/mdgriffith/style-elements/issues/91
     -- , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
     , editTask : Bool
@@ -61,6 +62,7 @@ model =
     -- TODO(akavel): newTask & editTask are not needed if we treat 'editTaskIdx
     -- == len(checklist)' as editing of new task
     , newTask = ""
+    , newTaskXXX = 0
     -- , mdl = Material.model  -- MDL boilerplate
     , editTask = False
     , editTaskIdx = -1
@@ -105,7 +107,9 @@ update msg model =
         AppendTask ->
             let
                 newModel =
-                    { model | newTask = "" }
+                    { model
+                        | newTask = ""
+                        , newTaskXXX = model.newTaskXXX + 1 }
                     |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task model.newTask False ])
             in ( newModel, PleaseSave )
         EditTask idx ->
@@ -235,12 +239,18 @@ viewFooter model =
             , options = []
             }
     else
-        Input.text PLAIN []
-            { onChange = EditNewTask
-            , value = model.newTask
-            , label = Input.labelAbove <| text "New task"
-            , options = []
-            }
+        row PLAIN []
+            [ Input.text PLAIN []
+                { onChange = EditNewTask
+                , value = model.newTask
+                , label = Input.labelAbove <| text "New task"
+                , options =
+                    [ Input.textKey <| toString model.newTaskXXX ]
+                }
+            , button PLAIN
+                [ Event.onClick AppendTask ]
+                ( italic "add" )
+            ]
 
 {--
 type alias Mdl = Material.Model
