@@ -6,7 +6,9 @@ import Html exposing (Html)
 -- import Html.Events
 import String
 -- mdgriffith/style-elements — easier building of HTML+CSS layouts
-import Style exposing (styleSheet)
+import Style exposing (styleSheet, style)
+import Style.Color as Color
+import Color exposing (..)
 import Element exposing (..)
 import Element.Attributes exposing (..)
 -- debois/elm-mdl — Material Design Lite (MDL)
@@ -160,11 +162,15 @@ type AppStyles
     = Screen
     | Navbar
     | TodoList
+    | Item Bool
     | Footer
 
 
 stylesheet =
-    styleSheet []
+    styleSheet
+        [ style (Item False)
+            [ Color.text gray ]
+        ]
 
 
 ---- VIEW ----
@@ -184,55 +190,13 @@ view model =
                 , spacing 20
                 , yScrollbar
                 ]
-                [ text "hello 1"
-                , text "hello 2"
-                , text "hello 3"
-                , text "hello 4"
-                , text "hello 5"
-                , text "hello 6"
-                , text "hello 7"
-                , text "hello 8"
-                , text "hello 9"
-                , text "hello 10"
-                , text "hello 11"
-                , text "hello 12"
-                , text "hello 13"
-                , text "hello 14"
-                , text "hello 15"
-                , text "hello 16"
-                , text "hello 17"
-                ]
-            -- , el TodoList [height fill] (text "TODO the lsit")
+                (List.indexedMap viewTask model.checklist.tasks)
             , el Footer [] (text "TODO clickabilly new item")
             ]
-        -- grid Screen [ height fill ]
-        --     { columns = [ fill ]
-        --     , rows =
-        --         [ content
-        --         , fill
-        --         , content
-        --         ]
-        --     , cells =
-        --         [ cellAt 0 0 <|
-        --             text model.checklist.name
-        --         , cellAt 0 1 <|
-        --             text "TODO the list"
-        --         , cellAt 0 2 <|
-        --             text "TODO clickabilly new list item"
-        --         ]
-        --     }
-        -- column Screen []
-        --     [ text model.checklist.name
-        --     , 
 
-cellAt : Int -> Int -> Element style variation msg -> OnGrid (Element style variation msg)
-cellAt x y elem =
-    Element.cell
-        { start = (x, y)
-        , width = 1
-        , height = 1
-        , content = elem
-        }
+viewTask : Int -> StorageV1.Task -> Element AppStyles variation msg
+viewTask idx submodel =
+    paragraph (Item <| not submodel.done) [] [text submodel.text]
 
 {--
 type alias Mdl = Material.Model
