@@ -8,6 +8,7 @@ import Color exposing (..)
 import Element exposing (..)
 import Element.Events as Event
 import Element.Input as Input
+import Element.Font as Font
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -147,57 +148,26 @@ subscriptions model =
     Sub.none
 
 
----- STYLES ----
-
-
-type Styles
-    = Screen
-    | Navbar
-    | Group      -- a group (list) of items
-    | Item Bool  -- True for pending, False for done
-    | Footer
-    | PLAIN
-
-
-type Variations
-    = Disabled
-
-
-stylesheet =
-    styleSheet
-        [ style (Item True)
-            [ variation Disabled styleDisabled
-            ]
-        , style (Item False)
-            [ Color.text gray
-            , variation Disabled styleDisabled
-            ]
-        ]
-
-
-styleDisabled =
-    -- [ Color.background lightGray ]
-    -- [ Filter.blur 0.5 ]
-    [ Filter.opacity 25.0 ]
-    -- [ Filter.blur 10.5, Filter.invert 10.5 ]
-    -- [ Style.prop "filter" "blur(5px) invert(25%)" ]
-
 ---- VIEW ----
 
 
 view : Model -> Html Msg
 view model =
-    viewport stylesheet <|
-        column Screen
+    Element.layout
+        [ height fill
+        , width fill
+        ]
+    <|
+        column
             [ height fill
             , width fill
             ]
-            [ el Navbar [] (text model.checklist.name)
-            , column Group
+            [ el [] (text model.checklist.name)
+            , column
                 [ height fill
                 , width fill
                 , spacing 20
-                , yScrollbar
+                , scrollbarY
                 ]
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
@@ -205,10 +175,10 @@ view model =
 
 viewTask : Model -> Int -> StorageV1.Task -> Element Msg
 viewTask model idx submodel =
-    paragraph (Item <| not submodel.done)
-        [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
-        , vary Disabled model.editTask
-        ]
+    paragraph
+        ( [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
+        , width fill
+        ] ++ (styleItem submodel model.editTask) )
         [ text submodel.text ]
 
 
@@ -216,57 +186,57 @@ viewFooter : Model -> Element Msg
 viewFooter model =
     if model.editTask
     then
-        Input.text PLAIN []
-            { onChange = EditTaskText
-            , value = model.editTaskText
-            , label = Input.labelAbove <| text "Edit task"
-            , options = []
+        Input.text
+            [ above (viewEditActions model) ]
+            { onChange = Just EditTaskText
+            , text = model.editTaskText
+            , placeholder = Nothing
+            , label = Input.labelAbove [] <| text "Edit task"
             }
-        |> above (viewEditActions model)
     else
-        row PLAIN []
-            [ Input.text PLAIN []
-                { onChange = EditNewTask
-                , value = model.newTask
-                , label = Input.labelAbove <| text "New task"
-                , options = []
-                    -- [ Input.textKey <| toString model.newTaskXXX ]
+        row []
+            [ Input.text []
+                { onChange = Just EditNewTask
+                , text = model.newTask
+                , placeholder = Nothing
+                , label = Input.labelAbove [] <| text "New task"
                 }
-            , Input.button PLAIN
-                [ Event.onClick AppendTask
-                , classList
+            , Input.button
+                [ classList
                     [ ("mdl-button", True)
                     , ("mdl-js-button", True)
                     , ("mdl-button--fab", True)
                     , ("mdl-button--colored", True)
                     , ("mdl-js-ripple-effect", True)
                     ]
-                , attribute "disabled" "disabled"
-                    |> attrWhen (String.trim model.newTask == "")
+                -- , attribute "disabled" "disabled"
+                --     |> attrWhen ()
                 ]
-                -- ( italic "add" )
-                ( icon "add" )
+                { onPress = if (String.trim model.newTask == "")
+                    then Nothing
+                    else Just AppendTask
+                , label = icon "add"
+                }
             ]
 
 
-viewEditActions : Model -> List (Element Msg)
+viewEditActions : Model -> Element Msg
 viewEditActions model =
-    [ row PLAIN
+    row
         -- [ spread
         [ width fill
         ]
-        [ Input.button PLAIN
-            [ Event.onClick CancelEdit
-            , alignLeft
-            ]
-            ( icon "close" )
-        , Input.button PLAIN
-            [ Event.onClick ToggleTask
-            , alignRight
-            ]
-            ( icon "done" )
+        [ Input.button
+            [ alignLeft ]
+            { onPress = Just CancelEdit
+            , label = icon "close"
+            }
+        , Input.button
+            [ alignRight ]
+            { onPress = Just ToggleTask
+            , label = icon "done"
+            }
         ]
-    ]
 
 
 {--
@@ -458,6 +428,28 @@ viewFooter model =
             [ Icon.i "add" ]
         ]
 --}
+
+
+---- STYLES ----
+
+
+styleItem : StorageV1.Task -> Bool -> List (Attribute Msg)
+styleItem task enabled =
+    ( if task.done
+        then [ Font.color gray ]
+        else []
+    ) ++
+    ( if enabled
+        then []
+        else [ alpha 25.0 ]
+    )
+
+-- styleDisabled =
+--     -- [ Color.background lightGray ]
+--     -- [ Filter.blur 0.5 ]
+--     [ Filter.opacity 25.0 ]
+--     -- [ Filter.blur 10.5, Filter.invert 10.5 ]
+--     -- [ Style.prop "filter" "blur(5px) invert(25%)" ]
 
 
 ---- UTILS ----
