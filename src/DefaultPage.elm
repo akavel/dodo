@@ -229,6 +229,7 @@ viewTask model idx submodel =
         ]
         [ text submodel.text ]
 
+
 viewFooter : Model -> Element Styles Variations Msg
 viewFooter model =
     if model.editTask
@@ -239,6 +240,7 @@ viewFooter model =
             , label = Input.labelAbove <| text "Edit task"
             , options = []
             }
+        |> above (viewEditActions model)
     else
         row PLAIN []
             [ Input.text PLAIN []
@@ -263,6 +265,27 @@ viewFooter model =
                 -- ( italic "add" )
                 ( icon "add" )
             ]
+
+
+viewEditActions : Model -> List (Element Styles Variations Msg)
+viewEditActions model =
+    [ row PLAIN
+        [ spread
+        -- , width fill
+        ]
+        [ button PLAIN
+            [ Event.onClick CancelEdit
+            -- , alignLeft
+            ]
+            ( icon "close" )
+        , button PLAIN
+            [ Event.onClick ToggleTask
+            -- , alignRight
+            ]
+            ( icon "done" )
+        ]
+    ]
+
 
 {--
 type alias Mdl = Material.Model
