@@ -2,31 +2,12 @@ module DefaultPage exposing (..)
 
 import Html exposing (Html)
 import Html.Attributes
--- import Html exposing (Html, div, text, p, header, footer, main_)
--- import Html.Attributes exposing (class, classList, style)
--- import Html.Events
 import String
--- mdgriffith/style-elements — easier building of HTML+CSS layouts
-import Style exposing (styleSheet, style, variation)
-import Style.Color as Color
-import Style.Filter as Filter
+-- mdgriffith/stylish-elephants — easier building of HTML+CSS layouts
 import Color exposing (..)
 import Element exposing (..)
-import Element.Attributes exposing (..)
 import Element.Events as Event
 import Element.Input as Input
--- debois/elm-mdl — Material Design Lite (MDL)
--- import Material
--- import Material.Scheme
--- import Material.Elevation as Elevation
--- import Material.Options as Options exposing (cs)
--- import Material.Color as Color
--- import Material.Textfield as Textfield
--- import Material.Button as Button
--- import Material.Icon as Icon
--- import Material.List as Lists
--- import Material.Menu as Menu
--- import Material.Typography as Typo
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -39,7 +20,7 @@ import StorageV1
 type alias Model =
     { checklist : StorageV1.Checklist
     , newTask : String
-    , newTaskXXX : Int   -- HACK required by https://github.com/mdgriffith/style-elements/issues/91
+    -- , newTaskXXX : Int   -- HACK required by https://github.com/mdgriffith/style-elements/issues/91
     -- , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
     , editTask : Bool
@@ -63,7 +44,7 @@ model =
     -- TODO(akavel): newTask & editTask are not needed if we treat 'editTaskIdx
     -- == len(checklist)' as editing of new task
     , newTask = ""
-    , newTaskXXX = 0
+    -- , newTaskXXX = 0
     -- , mdl = Material.model  -- MDL boilerplate
     , editTask = False
     , editTaskIdx = -1
@@ -110,7 +91,8 @@ update msg model =
                 newModel =
                     { model
                         | newTask = ""
-                        , newTaskXXX = model.newTaskXXX + 1 }
+                        -- , newTaskXXX = model.newTaskXXX + 1
+                        }
                     |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task model.newTask False ])
             in ( newModel, PleaseSave )
         EditTask idx ->
@@ -221,7 +203,7 @@ view model =
             , viewFooter model
             ]
 
-viewTask : Model -> Int -> StorageV1.Task -> Element Styles Variations Msg
+viewTask : Model -> Int -> StorageV1.Task -> Element Msg
 viewTask model idx submodel =
     paragraph (Item <| not submodel.done)
         [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
@@ -230,7 +212,7 @@ viewTask model idx submodel =
         [ text submodel.text ]
 
 
-viewFooter : Model -> Element Styles Variations Msg
+viewFooter : Model -> Element Msg
 viewFooter model =
     if model.editTask
     then
@@ -247,10 +229,10 @@ viewFooter model =
                 { onChange = EditNewTask
                 , value = model.newTask
                 , label = Input.labelAbove <| text "New task"
-                , options =
-                    [ Input.textKey <| toString model.newTaskXXX ]
+                , options = []
+                    -- [ Input.textKey <| toString model.newTaskXXX ]
                 }
-            , button PLAIN
+            , Input.button PLAIN
                 [ Event.onClick AppendTask
                 , classList
                     [ ("mdl-button", True)
@@ -267,20 +249,20 @@ viewFooter model =
             ]
 
 
-viewEditActions : Model -> List (Element Styles Variations Msg)
+viewEditActions : Model -> List (Element Msg)
 viewEditActions model =
     [ row PLAIN
-        [ spread
-        -- , width fill
+        -- [ spread
+        [ width fill
         ]
-        [ button PLAIN
+        [ Input.button PLAIN
             [ Event.onClick CancelEdit
-            -- , alignLeft
+            , alignLeft
             ]
             ( icon "close" )
-        , button PLAIN
+        , Input.button PLAIN
             [ Event.onClick ToggleTask
-            -- , alignRight
+            , alignRight
             ]
             ( icon "done" )
         ]
@@ -486,14 +468,26 @@ nth n list =
     List.head <| List.drop n list
 
 
-attrWhen : Bool -> Attribute variation msg -> Attribute variation msg
+attrWhen : Bool -> Attribute msg -> Attribute msg
 attrWhen condition attr =
     if condition
     then attr
-    else inlineStyle []
+    -- else inlineStyle []
+    -- TODO(akavel): try to find a better NOP attribute
+    else scale 1.0
 
 
-icon : String -> Element Styles Variations Msg
+attribute : String -> String -> Attribute msg
+attribute name value =
+    Html.Attributes.attribute name value |> htmlAttribute
+
+
+classList : List (String, Bool) -> Attribute msg
+classList list =
+    Html.Attributes.classList list |> htmlAttribute
+
+
+icon : String -> Element Msg
 icon name =
     -- TODO(akavel): check if `el (italic ...)` would work
     html <| Html.i
