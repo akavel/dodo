@@ -273,6 +273,17 @@ viewEditActions model =
                     { onPress = Just CancelEdit
                     , label = icon "close"
                     }
+                , Input.button
+                    [ alignRight
+                    , mdl ["button", "js-button", "shadow--4dp",
+                        "button--fab", "button--colored", "button--accent"]
+                    -- NOTE(akavel): without height, stylish-elefants makes button disappear
+                    , height (px 56)
+                    , disabledWhen (String.trim model.editTaskText == "")
+                    ]
+                    { onPress = Just SaveEdit
+                    , label = icon "check"
+                    }
                 ]
 
 
