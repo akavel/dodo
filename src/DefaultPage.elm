@@ -154,7 +154,8 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     Element.layout
-        [ height fill
+        -- NOTE(akavel): `height shrink` is a trick from mdgriffith himself; no idea how/why this works \O_o/
+        [ height shrink
         , width fill
         ]
     <|
@@ -163,23 +164,13 @@ view model =
             , width fill
             ]
             [ el [] (text model.checklist.name)
-            , el
+            , column
                 [ height fill
                 , width fill
                 , scrollbarY
-                -- , clipY
+                , spacing 20
                 ]
-                ( column
-                    [ spacing 20
-                    -- , scrollbarY
-                    , clipY
-                    ]
-                    -- [ height fill
-                    -- , width fill
-                    -- , spacing 20
-                    -- , scrollbarY
-                    -- ]
-                    (List.indexedMap (viewTask model) model.checklist.tasks) )
+                (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
             ]
 
