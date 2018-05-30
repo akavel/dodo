@@ -163,6 +163,21 @@ view model =
         column
             [ height fill
             , width fill
+            , attrWhen (model.editTask)
+                <| inFront
+                <| column
+                    [ height fill
+                    , width fill
+                    ]
+                    [ el
+                        [ Background.color Color.gray
+                        , alpha 0.75
+                        , height fill
+                        , width fill
+                        ]
+                        ( text "" )
+                    , viewFooter model
+                    ]
             ]
             [ el [] (text model.checklist.name)
             , column
@@ -170,13 +185,6 @@ view model =
                 , width fill
                 , scrollbarY
                 , spacing 20
-                , inFront
-                    <| el
-                        [ Background.color Color.gray
-                        , alpha 0.75
-                        , height fill
-                        ]
-                        ( text "gray-test" )
                 ]
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
