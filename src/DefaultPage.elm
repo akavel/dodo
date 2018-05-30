@@ -179,7 +179,8 @@ view model =
                     , viewFooter model
                     ]
             ]
-            [ el [ width fill ] (text model.checklist.name)
+            [ viewHeader model
+            -- [ el [ width fill ] (text model.checklist.name)
             , column
                 [ height fill
                 , width fill
@@ -190,6 +191,25 @@ view model =
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
             ]
+
+
+viewHeader : Model -> Element Msg
+viewHeader model =
+    row
+        [ width fill ]
+        [ Input.button
+            [ alignLeft ]
+            { onPress = Just SwipeLeft
+            , label = icon "chevron_left"
+            }
+        , el [ width fill ] (text model.checklist.name)
+        , Input.button
+            [ alignRight ]
+            { onPress = Just SwipeRight
+            , label = icon "chevron_right"
+            }
+        ]
+
 
 viewTask : Model -> Int -> StorageV1.Task -> Element Msg
 viewTask model idx submodel =
