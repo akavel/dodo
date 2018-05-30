@@ -6,6 +6,7 @@ import String
 -- mdgriffith/stylish-elephants — easier building of HTML+CSS layouts
 import Color exposing (..)
 import Element exposing (..)
+import Element.Background as Background
 import Element.Events as Event
 import Element.Input as Input
 import Element.Font as Font
@@ -169,6 +170,13 @@ view model =
                 , width fill
                 , scrollbarY
                 , spacing 20
+                , inFront
+                    <| el
+                        [ Background.color Color.gray
+                        , alpha 0.75
+                        , height fill
+                        ]
+                        ( text "gray-test" )
                 ]
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
