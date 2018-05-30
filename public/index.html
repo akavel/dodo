@@ -19,11 +19,27 @@
     <!-- end MDL styles -->
     <title>DODO app</title>
 <style>
+/* TODO(akavel): move to main.css */
 html, body, #root, .style-elements {
     height: 100%;
     min-height: 100%;
     width: 100%;
     min-width: 100%;
+}
+/* TODO(akavel): move to main.css */
+.grayed-out {
+    /* Mostly NOP, but force child position:absolute elements to be contained
+       see: https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#Identifying_the_containing_block
+     */
+    transform: translate(0,0);
+}
+.grayed-out:after {
+    content: "";
+    display: block;
+    position: fixed;
+    z-index: 1;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background-color: rgba(85%,85%,85%, 75%);
 }
 </style>
 
