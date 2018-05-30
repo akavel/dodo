@@ -192,7 +192,11 @@ viewFooter model =
             { onChange = Just EditTaskText
             , text = model.editTaskText
             , placeholder = Nothing
-            , label = Input.labelAbove [] <| text "Edit task"
+            -- , placeholder = Just <| Input.placeholder [] <| text "Edit task"
+            -- , label = Input.labelLeft [] <| text "Edit"
+            -- , label = Input.labelAbove [] <| text "Edit task"
+            , label = Input.labelLeft [] <| text ""
+            -- , label = Input.labelAbove [] <| text ""
             }
     else
         row []
@@ -200,7 +204,10 @@ viewFooter model =
                 { onChange = Just EditNewTask
                 , text = model.newTask
                 , placeholder = Nothing
-                , label = Input.labelAbove [] <| text "New task"
+                -- , placeholder = Just <| Input.placeholder [] <| text "New task"
+                , label = Input.labelLeft [] <| text "New"
+                -- , label = Input.labelAbove [] <| text "New task"
+                -- , label = Input.labelAbove [] <| text ""
                 }
             , Input.button
                 [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
