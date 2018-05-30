@@ -203,16 +203,10 @@ viewFooter model =
                 , label = Input.labelAbove [] <| text "New task"
                 }
             , Input.button
-                [ classList
-                    [ ("mdl-button", True)
-                    , ("mdl-js-button", True)
-                    , ("mdl-button--fab", True)
-                    , ("mdl-button--colored", True)
-                    , ("mdl-js-ripple-effect", True)
-                    ]
-                -- , attribute "disabled" "disabled"
-                --     |> attrWhen ()
+                [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
+                , disabledWhen (String.trim model.newTask == "")
                 ]
+                -- FIXME(akavel): why below `if` doesn't work to make the element disabled?
                 { onPress = if (String.trim model.newTask == "")
                     then Nothing
                     else Just AppendTask
@@ -223,21 +217,63 @@ viewFooter model =
 
 viewEditActions : Model -> Element Msg
 viewEditActions model =
-    row
-        -- [ spread
-        [ width fill
-        ]
-        [ Input.button
-            [ alignLeft ]
-            { onPress = Just CancelEdit
-            , label = icon "close"
-            }
-        , Input.button
-            [ alignRight ]
-            { onPress = Just ToggleTask
-            , label = icon "done"
-            }
-        ]
+    let
+        originalTask =
+            model.checklist.tasks
+            |> nth model.editTaskIdx
+        originalText =
+            originalTask
+            |> Maybe.map .text
+        isNotEdited =
+            originalText == Just model.editTaskText
+        isDone =
+            originalTask
+            |> Maybe.map .done
+            |> Maybe.withDefault False
+        doneIcon =
+            if isDone == True
+                then "sentiment_satisfied"       -- clicking will go back to only "satisfied"
+                else "sentiment_very_satisfied"  -- clicking will mark done == "very satisfied"
+    in
+        if isNotEdited
+        then
+            row
+                [ width fill
+                ]
+                [ Input.button
+                    [ alignLeft
+                    , mdl ["button", "js-button", "button--fab"]
+                    ]
+                    { onPress = Just CancelEdit
+                    , label = icon "close"
+                    }
+                , Input.button
+                    [ alignRight
+                    , mdl ["button", "js-button", "shadow--4dp",
+                        "button--fab", "button--colored"]
+                    -- NOTE(akavel): without height, stylish-elefants makes button disappear
+                    , height (px 56)
+                    , classList
+                        [ ("mdl-button--accent", not isDone)
+                        , ("mdl-button--primary", isDone)
+                        ]
+                    ]
+                    { onPress = Just ToggleTask
+                    , label = icon doneIcon
+                    }
+                ]
+        else
+            row
+                [ width fill
+                ]
+                [ Input.button
+                    [ alignLeft
+                    , mdl ["button", "js-button", "button--fab"]
+                    ]
+                    { onPress = Just CancelEdit
+                    , label = icon "close"
+                    }
+                ]
 
 
 {--
@@ -478,6 +514,19 @@ attribute name value =
 classList : List (String, Bool) -> Attribute msg
 classList list =
     Html.Attributes.classList list |> htmlAttribute
+
+
+disabledWhen : Bool -> Attribute msg
+disabledWhen condition =
+    attribute "disabled" "disabled"
+    |> attrWhen condition
+
+mdl : List String -> Attribute msg
+mdl classSuffixes =
+    classSuffixes
+    |> List.map (\class -> ("mdl-" ++ class, True))
+    |> Html.Attributes.classList
+    |> htmlAttribute
 
 
 icon : String -> Element Msg
