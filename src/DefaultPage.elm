@@ -179,12 +179,13 @@ view model =
                     , viewFooter model
                     ]
             ]
-            [ el [] (text model.checklist.name)
+            [ el [ width fill ] (text model.checklist.name)
             , column
                 [ height fill
                 , width fill
                 , scrollbarY
                 , spacing 20
+                , padding 20
                 ]
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
@@ -193,9 +194,12 @@ view model =
 viewTask : Model -> Int -> StorageV1.Task -> Element Msg
 viewTask model idx submodel =
     paragraph
-        ( [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
+        [ Event.onClick (EditTask idx)
         , width fill
-        ] ++ (styleItem submodel model.editTask) )
+        , Font.alignLeft
+        , attrWhen submodel.done
+            <| Font.color gray
+        ]
         [ text submodel.text ]
 
 
@@ -439,28 +443,6 @@ viewFooter model =
             [ Icon.i "add" ]
         ]
 --}
-
-
----- STYLES ----
-
-
-styleItem : StorageV1.Task -> Bool -> List (Attribute Msg)
-styleItem task enabled =
-    ( if task.done
-        then [ Font.color gray ]
-        else []
-    ) ++
-    ( if enabled
-        then []
-        else [ alpha 25.0 ]
-    )
-
--- styleDisabled =
---     -- [ Color.background lightGray ]
---     -- [ Filter.blur 0.5 ]
---     [ Filter.opacity 25.0 ]
---     -- [ Filter.blur 10.5, Filter.invert 10.5 ]
---     -- [ Style.prop "filter" "blur(5px) invert(25%)" ]
 
 
 ---- UTILS ----
