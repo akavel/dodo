@@ -163,18 +163,12 @@ view model =
             [ height fill
             , width fill
             ]
-            [ el
-                [ classList
-                    [ ( "grayed-out", model.editTask ) ]
-                ]
-                (text model.checklist.name)
+            [ el [] (text model.checklist.name)
             , column
                 [ height fill
                 , width fill
                 , scrollbarY
                 , spacing 20
-                -- , classList
-                --     [ ( "grayed-out", model.editTask ) ]
                 ]
                 (List.indexedMap (viewTask model) model.checklist.tasks)
             , viewFooter model
@@ -185,8 +179,6 @@ viewTask model idx submodel =
     paragraph
         ( [ Event.onClick (EditTask idx) |> attrWhen (not model.editTask)
         , width fill
-        , classList
-            [ ( "grayed-out", model.editTask ) ]
         ] ++ (styleItem submodel model.editTask) )
         [ text submodel.text ]
 
