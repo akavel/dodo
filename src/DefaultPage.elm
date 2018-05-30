@@ -163,13 +163,23 @@ view model =
             , width fill
             ]
             [ el [] (text model.checklist.name)
-            , column
+            , el
                 [ height fill
                 , width fill
-                , spacing 20
                 , scrollbarY
+                -- , clipY
                 ]
-                (List.indexedMap (viewTask model) model.checklist.tasks)
+                ( column
+                    [ spacing 20
+                    -- , scrollbarY
+                    , clipY
+                    ]
+                    -- [ height fill
+                    -- , width fill
+                    -- , spacing 20
+                    -- , scrollbarY
+                    -- ]
+                    (List.indexedMap (viewTask model) model.checklist.tasks) )
             , viewFooter model
             ]
 
