@@ -1,13 +1,16 @@
 module ListsPage exposing (..)
 
-import Html exposing (Html, div, text, p, header, footer, main_)
+import Html exposing (Html)
 import Html.Attributes exposing (class, classList, style)
 import Html.Events
--- debois/elm-mdl — Material Design Lite (MDL)
-import Material
-import Material.Scheme
-import Material.Options as Options exposing (cs)
-import Material.List as Lists
+-- mdgriffith/stylish-elephants — easier building of HTML+CSS layouts
+import Color exposing (..)
+import Element exposing (..)
+import Element.Background as Background
+-- import Element.Border as Border
+import Element.Events as Event
+import Element.Font as Font
+import Element.Input as Input
 -- (internal modules)
 import Slit
 import StorageV1
@@ -18,14 +21,12 @@ import StorageV1
 
 type alias Model =
     { lists : StorageV1.Model
-    , mdl : Material.Model  -- MDL boilerplate
     }
 
 
 model : Model
 model =
     { lists = Slit.fromElement <| StorageV1.Checklist "New List 0" []
-    , mdl = Material.model  -- MDL boilerplate
     }
 
 
@@ -34,7 +35,6 @@ model =
 
 type Msg
     = Select Int
-    | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -57,10 +57,6 @@ update msg model =
             in
                 ( newmodel, PleaseSwipeRight )
 
-        Mdl msg_ ->
-            Material.update Mdl msg_ model
-            |> Tuple.mapSecond Please
-
 
 ---- SUBSCRIPTIONS ----
 
@@ -73,32 +69,38 @@ subscriptions model =
 ---- VIEW ----
 
 
-type alias Mdl = Material.Model
-
 view : Model -> Html Msg
 view model =
-    div [ class "app-layout" ]
-        [ text "hello lists"
-        , Lists.ul []
-            (List.indexedMap viewItem <| Slit.toList model.lists)
+    Element.layout
+        -- NOTE(akavel): `height shrink` is a trick from mdgriffith himself; no idea how/why this works \O_o/
+        [ height shrink
+        , width fill
         ]
-    |> Material.Scheme.top
-
-
-viewItem : Int -> StorageV1.Checklist -> Html Msg
-viewItem idx submodel =
-    Lists.li
-        -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
-        -- see: https://github.com/google/material-design-lite/pull/1785/files
-        [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
-        , Options.attribute <| Html.Events.onClick (Select idx)
-        -- FIXME(akavel): why below doesn't work?
-        -- , Options.when (model.editTask && idx == model.editTaskIdx)
-        --     <| Color.background Color.primary
-        ]
-        [ Lists.content
-            [ Options.css "text-align" "left"
+    <|
+        column
+            [ height fill
+            , width fill
             ]
-            [ text (submodel.name) ]
+            [ el [ width fill ] ( text "helo lists" )
+            , column
+                [ height fill
+                , width fill
+                , spacing 20
+                , padding 20
+                ]
+                ( List.indexedMap viewItem <| Slit.toList model.lists )
+            ]
+
+
+viewItem : Int -> StorageV1.Checklist -> Element Msg
+viewItem idx submodel =
+    paragraph
+        -- TODO(akavel): add divider styled OK w.r.t. Material Design
+        -- see: https://github.com/google/material-design-lite/pull/1785/files
+        -- Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
+        [ Event.onClick (Select idx)
+        , width fill
+        , Font.alignLeft
         ]
+        [ text submodel.name ]
 

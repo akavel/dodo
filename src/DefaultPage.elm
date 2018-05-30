@@ -7,6 +7,7 @@ import String
 import Color exposing (..)
 import Element exposing (..)
 import Element.Background as Background
+-- import Element.Border as Border
 import Element.Events as Event
 import Element.Font as Font
 import Element.Input as Input
@@ -210,6 +211,9 @@ viewTask model idx submodel =
         , Font.alignLeft
         , attrWhen submodel.done
             <| Font.color gray
+        -- , Border.widthEach
+        --     { bottom = 1, left = 0, right = 0, top = 0 }
+        -- , Border.color <| Color.rgba 0 0 0 0.12
         ]
         [ text submodel.text ]
 
