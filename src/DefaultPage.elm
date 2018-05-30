@@ -8,8 +8,8 @@ import Color exposing (..)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Events as Event
-import Element.Input as Input
 import Element.Font as Font
+import Element.Input as Input
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -22,8 +22,6 @@ import StorageV1
 type alias Model =
     { checklist : StorageV1.Checklist
     , newTask : String
-    -- , newTaskXXX : Int   -- HACK required by https://github.com/mdgriffith/style-elements/issues/91
-    -- , mdl : Material.Model  -- MDL boilerplate
     -- TODO(akavel): put below stuff in single Maybe
     , editTask : Bool
     , editTaskIdx : Int
@@ -46,8 +44,6 @@ model =
     -- TODO(akavel): newTask & editTask are not needed if we treat 'editTaskIdx
     -- == len(checklist)' as editing of new task
     , newTask = ""
-    -- , newTaskXXX = 0
-    -- , mdl = Material.model  -- MDL boilerplate
     , editTask = False
     , editTaskIdx = -1
     , editTaskText = ""
@@ -69,7 +65,6 @@ type Msg
     | ToggleTask
     | SaveEdit
     | DeleteTask
-    -- | Mdl (Material.Msg Msg)  -- MDL boilerplate
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -135,9 +130,6 @@ update msg model =
                             then Nothing
                             else Just task)
             in ( newModel, PleaseSave )
-        -- Mdl msg_ ->
-        --     Material.update Mdl msg_ model
-        --     |> Tuple.mapSecond Please
 
 
 ---- SUBSCRIPTIONS ----
@@ -180,7 +172,6 @@ view model =
                     ]
             ]
             [ viewHeader model
-            -- [ el [ width fill ] (text model.checklist.name)
             , column
                 [ height fill
                 , width fill
@@ -202,7 +193,7 @@ viewHeader model =
             { onPress = Just SwipeLeft
             , label = icon "chevron_left"
             }
-        , el [ width fill ] (text model.checklist.name)
+        , el [ centerX ] (text model.checklist.name)
         , Input.button
             [ alignRight ]
             { onPress = Just SwipeRight
@@ -335,8 +326,6 @@ viewEditActions model =
 
 
 {--
-type alias Mdl = Material.Model
-
 view : Model -> Html Msg
 view model =
     div [ class "app-layout" ]
