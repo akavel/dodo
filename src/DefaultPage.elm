@@ -367,35 +367,12 @@ viewTask idx submodel =
 
 viewEditActions model =
     let
-        originalTask =
-            model.checklist.tasks
-            |> nth model.editTaskIdx
-        originalText =
-            originalTask
-            |> Maybe.map .text
-        isNotEdited =
-            originalText == Just model.editTaskText
-        isDone =
-            originalTask
-            |> Maybe.map .done
-            |> Maybe.withDefault False
-        doneIcon =
-            if isDone == True
-                then "sentiment_satisfied"       -- clicking will go back to only "satisfied"
-                else "sentiment_very_satisfied"  -- clicking will mark done == "very satisfied"
         -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
         stretcher =
             div [ style [("flex", "1")] ] []
     in
         if isNotEdited
         then
-            [ Button.render
-                Mdl [80, 0] model.mdl  -- MDL boilerplate
-                [ Button.fab
-                , Button.flat
-                , Options.onClick CancelEdit
-                ]
-                [ Icon.i "close" ]
             , stretcher
             -- TODO(akavel): make the menu icon bigger & proper fab (or at least minifab)
             , Menu.render
@@ -409,37 +386,6 @@ viewEditActions model =
                     [ Icon.i "delete_forever", text "Delete task?" ]
                 ]
             , stretcher
-            , Button.render
-                Mdl [80, 9] model.mdl  -- MDL boilerplate
-                [ Button.fab
-                , Button.colored
-                , Button.accent |> Options.when (not isDone)
-                , Button.primary |> Options.when isDone
-                , Elevation.e4
-                , Options.onClick ToggleTask
-                ]
-                [ Icon.i doneIcon ]
-            ]
-        else
-            [ Button.render
-                Mdl [81, 0] model.mdl  -- MDL boilerplate
-                [ Button.fab
-                , Button.flat
-                , Options.onClick CancelEdit
-                ]
-                [ Icon.i "close" ]
-            , stretcher
-            , Button.render
-                Mdl [81, 9] model.mdl  -- MDL boilerplate
-                [ Button.fab
-                , Button.colored
-                , Button.accent
-                , Elevation.e4
-                , Button.disabled |> Options.when (String.trim model.editTaskText == "")
-                , Options.onClick SaveEdit
-                ]
-                [ Icon.i "check" ]
-            ]
 
 viewFooter model =
     if model.editTask
@@ -467,12 +413,6 @@ viewFooter model =
             ]
             []
         , Button.render
-            Mdl [3] model.mdl  -- MDL boilerplate
-            [ Button.fab
-            , Button.colored
-            , Button.disabled |> Options.when (String.trim model.newTask == "")
-            , Options.onClick AppendTask
-            ]
             [ Icon.i "add" ]
         ]
 --}
