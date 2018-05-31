@@ -22,11 +22,8 @@ import StorageV1
 
 type alias Model =
     { checklist : StorageV1.Checklist
-    , newTask : String
-    -- TODO(akavel): put below stuff in single Maybe
-    , editTask : Bool
-    , editTaskIdx : Int
-    , editTaskText : String
+    , editedTaskText : String
+    , editedTaskIdx : Int
     , selectedTab : Int
     , verifyDeleteTask : Bool
     }
@@ -43,15 +40,14 @@ model =
         [ StorageV1.Task "Foo" False
         , StorageV1.Task "Bar" True
         ]
-    -- TODO(akavel): newTask & editTask are not needed if we treat 'editTaskIdx
-    -- == len(checklist)' as editing of new task
-    , newTask = ""
-    , editTask = False
-    , editTaskIdx = -1
-    , editTaskText = ""
+    , editedTaskText = ""
+    , editedTaskIdx = newTaskIdx
     , selectedTab = 1
     , verifyDeleteTask = False
     }
+
+
+newTaskIdx = -1
 
 
 ---- UPDATE ----
@@ -60,8 +56,6 @@ model =
 type Msg
     = SwipeLeft
     | SwipeRight
-    | EditNewTask String
-    | AppendTask
     | EditTask Int
     | EditTaskText String
     | CancelEdit
@@ -85,46 +79,46 @@ update msg model =
             ( model, PleaseSwipeLeft )
         SwipeRight ->
             ( model, PleaseSwipeRight )
-        EditNewTask newText ->
-            ( { model | newTask = newText }, Please Cmd.none )
-        AppendTask ->
-            let
-                newModel =
-                    { model
-                        | newTask = ""
-                        -- , newTaskXXX = model.newTaskXXX + 1
-                        }
-                    |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task model.newTask False ])
-            in ( newModel, PleaseSave )
         EditTask idx ->
             ( { model
-                | editTask = True
-                , editTaskIdx = idx
-                , editTaskText =
+                | editedTaskIdx = idx
+                , editedTaskText =
                     model.checklist.tasks
                     |> nth idx
                     |> Maybe.map .text
                     |> Maybe.withDefault ""
                 }, Please Cmd.none )
         EditTaskText newText ->
-            ( { model | editTaskText = newText }, Please Cmd.none )
+            ( { model | editedTaskText = newText }, Please Cmd.none )
         CancelEdit ->
             ( model |> stopEdit, Please Cmd.none )
         ToggleTask ->
             let
                 newModel =
                     model |> stopEdit |> transformTasksWith (\idx task ->
-                        if idx == model.editTaskIdx
+                        if idx == model.editedTaskIdx
                             then Just { task | done = not task.done }
                             else Just task)
             in ( newModel, PleaseSave )
         SaveEdit ->
             let
+                capitalizeLeft s =
+                    (s |> String.left 1 |> String.toUpper)
+                    ++
+                    (s |> String.dropLeft 1)
+                newText =
+                    model.editedTaskText |> String.trim |> capitalizeLeft
                 newModel =
-                    model |> stopEdit |> transformTasksWith (\idx task ->
-                        if idx == model.editTaskIdx
-                            then Just { task | text = model.editTaskText }
-                            else Just task)
+                    if model.editedTaskIdx == newTaskIdx
+                    then
+                        model
+                        |> stopEdit
+                        |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task newText False ])
+                    else
+                        model |> stopEdit |> transformTasksWith (\idx task ->
+                            if idx == model.editedTaskIdx
+                                then Just { task | text = newText }
+                                else Just task)
             in ( newModel, PleaseSave )
         VerifyDeleteTask ->
             ( { model | verifyDeleteTask = True }, Please Cmd.none )
@@ -134,7 +128,7 @@ update msg model =
             let
                 newModel =
                     model |> stopEdit |> transformTasksWith (\idx task ->
-                        if idx == model.editTaskIdx
+                        if idx == model.editedTaskIdx
                             then Nothing
                             else Just task)
             in ( newModel, PleaseSave )
@@ -163,7 +157,7 @@ view model =
         column
             [ height fill
             , width fill
-            , attrWhen (model.editTask)
+            , attrWhen (model.editedTaskIdx /= newTaskIdx)
                 <| inFront
                 <| column
                     [ height fill
@@ -216,7 +210,7 @@ viewTask idx submodel =
         [ Event.onClick (EditTask idx)
         , width fill
         -- FIXME(akavel): why below doesn't work?
-        , attrWhen (model.editTask && idx == model.editTaskIdx)
+        , attrWhen (idx == model.editedTaskIdx)
             -- TODO(akavel): use MDL's primary/accent color
             <| Background.color Color.lightBlue
         -- TODO(akavel): add hairline between tasks somehow; maybe via padding here?
@@ -247,12 +241,12 @@ viewTask idx submodel =
 
 viewFooter : Model -> Element Msg
 viewFooter model =
-    if model.editTask
+    if model.editedTaskIdx /= newTaskIdx
     then
         Input.text
             [ above (viewEditActions model) ]
             { onChange = Just EditTaskText
-            , text = model.editTaskText
+            , text = model.editedTaskText
             , placeholder = Nothing
             -- , placeholder = Just <| Input.placeholder [] <| text "Edit task"
             -- , label = Input.labelLeft [] <| text "Edit"
@@ -264,15 +258,16 @@ viewFooter model =
         row [ width fill ]
             [ Input.text
                 [ width fill ]
-                { onChange = Just EditNewTask
-                , text = model.newTask
+                { onChange = Just EditTaskText
+                , text = model.editedTaskText
                 -- , placeholder = Nothing
                 , placeholder = Just <| Input.placeholder
                     [ Font.color Color.gray
                     , Font.alignLeft
                     , Font.italic
                     ]
-                    <| text "New..."
+                    -- <| text "..."
+                    <| icon "create"
                 , label = Input.labelLeft [] <| text ""
                 -- , label = Input.labelLeft [] <| text "New"
                 -- , label = Input.labelAbove [] <| text "New task"
@@ -282,13 +277,13 @@ viewFooter model =
                 [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
                 -- NOTE(akavel): without height, stylish-elefants makes button disappear
                 , height (px 56)
-                , disabledWhen (String.trim model.newTask == "")
+                , disabledWhen (String.trim model.editedTaskText == "")
                 , alignRight
                 ]
                 -- FIXME(akavel): why below `if` doesn't work to make the element disabled?
-                { onPress = if (String.trim model.newTask == "")
+                { onPress = if (String.trim model.editedTaskText == "")
                     then Nothing
-                    else Just AppendTask
+                    else Just SaveEdit
                 , label = icon "add"
                 }
             ]
@@ -299,12 +294,12 @@ viewEditActions model =
     let
         originalTask =
             model.checklist.tasks
-            |> nth model.editTaskIdx
+            |> nth model.editedTaskIdx
         originalText =
             originalTask
             |> Maybe.map .text
         isNotEdited =
-            originalText == Just model.editTaskText
+            originalText == Just model.editedTaskText
         isDone =
             originalTask
             |> Maybe.map .done
@@ -392,7 +387,7 @@ viewEditActions model =
                         "button--fab", "button--colored", "button--accent"]
                     -- NOTE(akavel): without height, stylish-elefants makes button disappear
                     , height (px 56)
-                    , disabledWhen (String.trim model.editTaskText == "")
+                    , disabledWhen (String.trim model.editedTaskText == "")
                     ]
                     { onPress = Just SaveEdit
                     , label = icon "check"
@@ -458,9 +453,8 @@ icon name =
 stopEdit : Model -> Model
 stopEdit model =
     { model
-        | editTask = False
-        , editTaskIdx = -1
-        , verifyDeleteTask = False
+        | editedTaskIdx = newTaskIdx
+        , editedTaskText = ""
         }
 
 transformTasksWith : (Int -> StorageV1.Task -> Maybe StorageV1.Task) -> Model -> Model
@@ -471,9 +465,6 @@ transformTasksWith taskModifier model =
             |> List.indexedMap taskModifier
             |> List.filterMap identity
     in
-        { model
-            | editTask = False
-            , editTaskIdx = -1 }
-        |> Focus.update (checklist => tasks) listModifier
+        model |> Focus.update (checklist => tasks) listModifier
 
 
