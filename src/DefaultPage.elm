@@ -24,8 +24,7 @@ type alias Model =
     { checklist : StorageV1.Checklist
     , editedTaskText : String
     , editedTaskIdx : Int
-    , selectedTab : Int
-    , verifyDeleteTask : Bool
+    , verifyingTaskDeletion : Bool
     }
 
 checklist : Focus { r | checklist : a } a
@@ -42,8 +41,7 @@ model =
         ]
     , editedTaskText = ""
     , editedTaskIdx = newTaskIdx
-    , selectedTab = 1
-    , verifyDeleteTask = False
+    , verifyingTaskDeletion = False
     }
 
 
@@ -121,7 +119,7 @@ update msg model =
                                 else Just task)
             in ( newModel, PleaseSave )
         VerifyDeleteTask ->
-            ( { model | verifyDeleteTask = True }, Please Cmd.none )
+            ( { model | verifyingTaskDeletion = True }, Please Cmd.none )
         DeleteTask False ->
             ( model |> stopEdit, Please Cmd.none )
         DeleteTask True ->
@@ -333,7 +331,7 @@ viewEditActions model =
                     -- TODO(akavel): allow quitting the menu by pressing
                     -- outside of it, or just display a regular yes/no
                     -- modal dialog window instead.
-                    , attrWhen model.verifyDeleteTask
+                    , attrWhen model.verifyingTaskDeletion
                         <| above
                         <| column []
                             -- [ Background.color Color.white

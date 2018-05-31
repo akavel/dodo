@@ -65,6 +65,7 @@ We need to be able to:
 - TODO: copy (duplicate) a list with a new name
 - TODO: clear (hide) all disabled items
 - TODO: move items around the list
+- TODO: calendar with done items
 -}
 type Msg
     = Loaded (Maybe Storage)
