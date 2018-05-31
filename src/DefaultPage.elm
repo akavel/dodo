@@ -189,12 +189,17 @@ view model =
 viewHeader : Model -> Element Msg
 viewHeader model =
     row
-        [ width fill ]
+        [ width fill
+        , mdl ["shadow--2dp", "color--primary", "color-text--primary-contrast"]
+        , height (px 40)
+        ]
         [ Input.button
             [ alignLeft ]
             { onPress = Just SwipeLeft
             , label = icon "chevron_left"
             }
+        -- TODO(akavel): if text overflows, somehow make it use smaller font +
+        -- multiple rows; if even longer, trim right with "..."
         , el [ centerX ] (text model.checklist.name)
         , Input.button
             [ alignRight ]
