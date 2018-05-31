@@ -187,7 +187,7 @@ view model =
                 , spacing 20
                 , padding 20
                 ]
-                (List.indexedMap (viewTask model) model.checklist.tasks)
+                (List.indexedMap viewTask model.checklist.tasks)
             , viewFooter model
             ]
 
@@ -210,19 +210,39 @@ viewHeader model =
         ]
 
 
-viewTask : Model -> Int -> StorageV1.Task -> Element Msg
-viewTask model idx submodel =
-    paragraph
+viewTask : Int -> StorageV1.Task -> Element Msg
+viewTask idx submodel =
+    row
         [ Event.onClick (EditTask idx)
         , width fill
-        , Font.alignLeft
-        , attrWhen submodel.done
-            <| Font.color gray
-        -- , Border.widthEach
-        --     { bottom = 1, left = 0, right = 0, top = 0 }
-        -- , Border.color <| Color.rgba 0 0 0 0.12
+        -- FIXME(akavel): why below doesn't work?
+        , attrWhen (model.editTask && idx == model.editTaskIdx)
+            -- TODO(akavel): use MDL's primary/accent color
+            <| Background.color Color.lightBlue
+        -- TODO(akavel): add hairline between tasks somehow; maybe via padding here?
+        -- Ideally, make it follow Material Design guidelines (rgba(0,0,0,.12)?)
         ]
-        [ text submodel.text ]
+        [ paragraph
+            [ width fill
+            , Font.alignLeft
+            , attrWhen submodel.done
+                <| Font.color
+                <| Color.greyscale 0.2
+            ]
+            [ text submodel.text ]
+        , el
+            [ alignRight
+            , attrWhen submodel.done
+                <| Font.color
+                <| Color.greyscale 0.2
+            -- If not done, use invisible (transparent) color, but still
+            -- display the element, to keep the layout from moving when toggled.
+            , attrWhen (not submodel.done)
+                <| Font.color
+                <| Color.rgba 0 0 0 0
+            ]
+            ( icon "sentiment_very_satisfied" )
+        ]
 
 
 viewFooter : Model -> Element Msg
@@ -245,9 +265,15 @@ viewFooter model =
             [ Input.text []
                 { onChange = Just EditNewTask
                 , text = model.newTask
-                , placeholder = Nothing
-                -- , placeholder = Just <| Input.placeholder [] <| text "New task"
-                , label = Input.labelLeft [] <| text "New"
+                -- , placeholder = Nothing
+                , placeholder = Just <| Input.placeholder
+                    [ Font.color Color.gray
+                    , Font.alignLeft
+                    , Font.italic
+                    ]
+                    <| text "New..."
+                , label = Input.labelLeft [] <| text ""
+                -- , label = Input.labelLeft [] <| text "New"
                 -- , label = Input.labelAbove [] <| text "New task"
                 -- , label = Input.labelAbove [] <| text ""
                 }
@@ -373,135 +399,6 @@ viewEditActions model =
                 ]
 
 
-{--
-view : Model -> Html Msg
-view model =
-    div [ class "app-layout" ]
-        [ header
-            [ classList
-                [ ("app-header", True)
-                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                , ("grayed-out", model.editTask)
-                ]
-            ]
-            [ Button.render
-                Mdl [10, 0] model.mdl  -- MDL boilerplate
-                [ Options.onClick SwipeLeft ]
-                [ Icon.i "chevron_left" ]
-            , Options.styled p
-                [ Typo.title ]
-                [ text model.checklist.name ]
-            , Button.render
-                Mdl [10, 1] model.mdl  -- MDL boilerplate
-                [ Options.onClick SwipeRight ]
-                [ Icon.i "chevron_right" ]
-            ]
-            -- [ text model.checklist.name ]
-        , main_
-            [ classList
-                [ ("app-main", True)
-                -- TODO(akavel): clicking grayed-out area should cause CancelEdit
-                , ("grayed-out", model.editTask)
-                ]
-            ]
-            [ div
-                [ classList
-                    [ ("edit-actions", True)
-                    , ("hidden-out", not model.editTask)
-                    ]
-                ]
-                (viewEditActions model)
-            , Lists.ul [ cs "app-checklist" ]
-                (List.indexedMap viewTask model.checklist.tasks)
-            ]
-        , footer [ class "app-footer" ]
-            (viewFooter model)
-        ]
-    |> Material.Scheme.top
-
-viewTask : Int -> StorageV1.Task -> Html Msg
-viewTask idx submodel =
-    let
-        gray =
-            Color.color Color.Grey Color.S300
-        content2 =
-            if submodel.done
-            then
-                Lists.content2 []
-                    [ Icon.view "sentiment_very_satisfied" [ Color.text gray ] ]
-            else
-                text ""
-    in
-        Lists.li
-            -- TODO(akavel): verify if divider is styled OK w.r.t. Material Design
-            -- see: https://github.com/google/material-design-lite/pull/1785/files
-            [ Options.css "border-bottom" "1px solid rgba(0,0,0, 0.12)"
-            , Options.attribute <| Html.Events.onClick (EditTask idx)
-            -- FIXME(akavel): why below doesn't work?
-            , Options.when (model.editTask && idx == model.editTaskIdx)
-                <| Color.background Color.primary
-            ]
-            [ Lists.content
-                [ Options.when submodel.done <| Color.text gray
-                , Options.css "text-align" "left"
-                ]
-                [ text (submodel.text) ]
-            , content2
-            ]
-
-viewEditActions model =
-    let
-        -- TODO(akavel): can we remove below div and do the stretching purely via CSS?
-        stretcher =
-            div [ style [("flex", "1")] ] []
-    in
-        if isNotEdited
-        then
-            , stretcher
-            -- TODO(akavel): make the menu icon bigger & proper fab (or at least minifab)
-            , Menu.render
-                Mdl [80, 1] model.mdl  -- MDL boilerplate
-                [ Menu.topLeft
-                , Menu.icon "delete"
-                , Options.css "id" "edit-menu"
-                ]
-                [ Menu.item
-                    [ Menu.onSelect DeleteTask ]
-                    [ Icon.i "delete_forever", text "Delete task?" ]
-                ]
-            , stretcher
-
-viewFooter model =
-    if model.editTask
-    then
-        [ Textfield.render
-            Mdl [1] model.mdl  -- MDL boilerplate
-            [ Textfield.label "Edit task"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            , Textfield.value model.editTaskText
-            , Options.attribute <| Html.Attributes.attribute "autocapitalize" "sentences"
-            , Options.onInput EditTaskText
-            ]
-            []
-        ]
-    else
-        [ Textfield.render
-            Mdl [2] model.mdl  -- MDL boilerplate
-            [ Textfield.label "New task"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            , Textfield.value model.newTask
-            , Options.attribute <| Html.Attributes.attribute "autocapitalize" "sentences"
-            , Options.onInput EditNewTask
-            ]
-            []
-        , Button.render
-            [ Icon.i "add" ]
-        ]
---}
-
-
 ---- UTILS ----
 
 
@@ -517,6 +414,13 @@ attrWhen condition attr =
     -- else inlineStyle []
     -- TODO(akavel): try to find a better NOP attribute
     else scale 1.0
+
+
+elemWhen : Bool -> Element msg -> Element msg
+elemWhen condition elem =
+    if condition
+    then elem
+    else text ""
 
 
 attribute : String -> String -> Attribute msg
