@@ -7,7 +7,7 @@ import String
 import Color exposing (..)
 import Element exposing (..)
 import Element.Background as Background
--- import Element.Border as Border
+import Element.Border as Border
 import Element.Events as Event
 import Element.Font as Font
 import Element.Input as Input
@@ -28,6 +28,7 @@ type alias Model =
     , editTaskIdx : Int
     , editTaskText : String
     , selectedTab : Int
+    , verifyDeleteTask : Bool
     }
 
 checklist : Focus { r | checklist : a } a
@@ -49,6 +50,7 @@ model =
     , editTaskIdx = -1
     , editTaskText = ""
     , selectedTab = 1
+    , verifyDeleteTask = False
     }
 
 
@@ -65,7 +67,8 @@ type Msg
     | CancelEdit
     | ToggleTask
     | SaveEdit
-    | DeleteTask
+    | VerifyDeleteTask
+    | DeleteTask Bool
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -123,7 +126,11 @@ update msg model =
                             then Just { task | text = model.editTaskText }
                             else Just task)
             in ( newModel, PleaseSave )
-        DeleteTask ->
+        VerifyDeleteTask ->
+            ( { model | verifyDeleteTask = True }, Please Cmd.none )
+        DeleteTask False ->
+            ( model |> stopEdit, Please Cmd.none )
+        DeleteTask True ->
             let
                 newModel =
                     model |> stopEdit |> transformTasksWith (\idx task ->
@@ -285,9 +292,42 @@ viewEditActions model =
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
+                    , Background.color <| Color.rgb 200 200 200
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
+                    }
+                , Input.button
+                    [ centerX
+                    -- , mdl ["button", "js-button", "button--mini-fab"]
+                    -- TODO(akavel): allow quitting the menu by pressing
+                    -- outside of it, or just display a regular yes/no
+                    -- modal dialog window instead.
+                    , attrWhen model.verifyDeleteTask
+                        <| above
+                        <| column []
+                            -- [ Background.color Color.white
+                            -- , padding 10
+                            -- , width shrink
+                            -- , height shrink
+                            -- ]
+                            [ Input.button
+                                [ Background.color Color.white
+                                , padding 10
+                                , Border.rounded 3
+                                , mdl ["shadow--2dp"]
+                                ]
+                                { onPress = Just (DeleteTask True)
+                                -- , label = text "Delete task?"
+                                , label = row []
+                                    [ icon "delete_forever"
+                                    , text "Delete task?"
+                                    ]
+                                }
+                            ]
+                    ]
+                    { onPress = Just VerifyDeleteTask
+                    , label = icon "delete"
                     }
                 , Input.button
                     [ alignRight
@@ -311,6 +351,7 @@ viewEditActions model =
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
+                    , Background.color <| Color.rgb 200 200 200
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
@@ -510,7 +551,9 @@ stopEdit : Model -> Model
 stopEdit model =
     { model
         | editTask = False
-        , editTaskIdx = -1 }
+        , editTaskIdx = -1
+        , verifyDeleteTask = False
+        }
 
 transformTasksWith : (Int -> StorageV1.Task -> Maybe StorageV1.Task) -> Model -> Model
 transformTasksWith taskModifier model =
