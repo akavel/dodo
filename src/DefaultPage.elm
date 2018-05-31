@@ -93,10 +93,8 @@ update msg model =
         ToggleTask ->
             let
                 newModel =
-                    model |> stopEdit |> transformTasksWith (\idx task ->
-                        if idx == model.editedTaskIdx
-                            then Just { task | done = not task.done }
-                            else Just task)
+                    model |> stopEdit |> modifyNthTask model.editedTaskIdx
+                        (\task -> Just { task | done = not task.done })
             in ( newModel, PleaseSave )
         SaveEdit ->
             let
@@ -113,10 +111,8 @@ update msg model =
                         |> stopEdit
                         |> Focus.update (checklist => tasks) (\tasks -> tasks ++ [ StorageV1.Task newText False ])
                     else
-                        model |> stopEdit |> transformTasksWith (\idx task ->
-                            if idx == model.editedTaskIdx
-                                then Just { task | text = newText }
-                                else Just task)
+                        model |> stopEdit |> modifyNthTask model.editedTaskIdx
+                            (\task -> Just { task | text = newText })
             in ( newModel, PleaseSave )
         VerifyDeleteTask ->
             ( { model | verifyingTaskDeletion = True }, Please Cmd.none )
@@ -125,10 +121,8 @@ update msg model =
         DeleteTask True ->
             let
                 newModel =
-                    model |> stopEdit |> transformTasksWith (\idx task ->
-                        if idx == model.editedTaskIdx
-                            then Nothing
-                            else Just task)
+                    model |> stopEdit |> modifyNthTask model.editedTaskIdx
+                        (\task -> Nothing)
             in ( newModel, PleaseSave )
 
 
@@ -460,14 +454,19 @@ stopEdit model =
         , editedTaskText = ""
         }
 
-transformTasksWith : (Int -> StorageV1.Task -> Maybe StorageV1.Task) -> Model -> Model
-transformTasksWith taskModifier model =
+
+modifyNthTask : Int -> (StorageV1.Task -> Maybe StorageV1.Task) -> Model -> Model
+modifyNthTask n modifier model =
     let
+        newModel =
+            model |> Focus.update (checklist => tasks) listModifier
         listModifier tasks =
             tasks
-            |> List.indexedMap taskModifier
+            |> List.indexedMap idxModifier
             |> List.filterMap identity
-    in
-        model |> Focus.update (checklist => tasks) listModifier
-
+        idxModifier idx task =
+            if idx == n
+            then (task |> modifier)
+            else Just task
+    in newModel
 
