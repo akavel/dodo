@@ -253,7 +253,10 @@ viewFooter model =
                 }
             , Input.button
                 [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
+                -- NOTE(akavel): without height, stylish-elefants makes button disappear
+                , height (px 56)
                 , disabledWhen (String.trim model.newTask == "")
+                , alignRight
                 ]
                 -- FIXME(akavel): why below `if` doesn't work to make the element disabled?
                 { onPress = if (String.trim model.newTask == "")
