@@ -261,8 +261,9 @@ viewFooter model =
             -- , label = Input.labelAbove [] <| text ""
             }
     else
-        row []
-            [ Input.text []
+        row [ width fill ]
+            [ Input.text
+                [ width fill ]
                 { onChange = Just EditNewTask
                 , text = model.newTask
                 -- , placeholder = Nothing
