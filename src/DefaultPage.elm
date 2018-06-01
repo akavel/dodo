@@ -66,7 +66,8 @@ type Msg
     | VerifyDeleteTask
     | DeleteTask Bool
     | ShowChecklistMenu Bool
-    | EditChecklistName String
+    | EditChecklistName (Maybe String)
+    | SaveChecklistName
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -105,10 +106,6 @@ update msg model =
             in ( newModel, PleaseSave )
         SaveEdit ->
             let
-                capitalizeLeft s =
-                    (s |> String.left 1 |> String.toUpper)
-                    ++
-                    (s |> String.dropLeft 1)
                 newText =
                     model.editedTaskText |> String.trim |> capitalizeLeft
                 newModel =
@@ -133,11 +130,30 @@ update msg model =
             in ( newModel, PleaseSave )
         ShowChecklistMenu show ->
             ( { model | showingChecklistMenu = show }, Please Cmd.none )
-        EditChecklistName newName ->
+        EditChecklistName (Just newName) ->
             ( { model
                 | editedChecklistName = Just newName
                 , showingChecklistMenu = False
                 }, Please Cmd.none )
+        EditChecklistName Nothing ->
+            ( { model
+                | editedChecklistName = Nothing
+                }, Please Cmd.none )
+        SaveChecklistName ->
+            let
+                newName =
+                    model.editedChecklistName
+                    |> Maybe.withDefault model.checklist.name
+                    |> String.trim
+                    |> capitalizeLeft
+                checklist =
+                    model.checklist
+                newChecklist =
+                    { checklist | name = newName }
+            in ( { model
+                | checklist = newChecklist
+                , editedChecklistName = Nothing
+                }, PleaseSave )
 
 
 ---- SUBSCRIPTIONS ----
@@ -182,7 +198,7 @@ view model =
             -- Show Checklist-related menu as a modal dialog, if needed
             , attrWhen model.showingChecklistMenu
                 <| inFront
-                <| viewChecklistMenuLayer
+                <| viewChecklistMenuLayer model.checklist.name
             -- Show modal dialog for editing Checklist name, if needed
             , attrWhen (model.editedChecklistName /= Nothing)
                 <| inFront
@@ -425,8 +441,8 @@ viewEditActions model =
                 ]
 
 
-viewChecklistMenuLayer : Element Msg
-viewChecklistMenuLayer =
+viewChecklistMenuLayer : String -> Element Msg
+viewChecklistMenuLayer checklistName =
     let
         -- filler is a fully transparent area, which is still clickable
         -- (to dismiss the menu)
@@ -467,7 +483,7 @@ viewChecklistMenuLayer =
                     , text "New list..."
                     ]
                 , row
-                    [ Event.onClick (EditChecklistName model.checklist.name)
+                    [ Event.onClick <| EditChecklistName <| Just checklistName
                     ]
                     [ icon "edit"
                     , text "Rename list..."
@@ -489,8 +505,33 @@ viewChecklistNameEditor name =
             [ width fill
             , mdl ["shadow--2dp", "color--primary", "color-text--primary-contrast"]
             , height (px 40)
+            , below
+                <| row
+                    [ width fill ]
+                    [ Input.button
+                        [ alignLeft
+                        , mdl ["button", "js-button", "button--fab"]
+                        , Background.color <| Color.rgb 200 200 200
+                        ]
+                        { onPress = Just (EditChecklistName Nothing)
+                        , label = icon "close"
+                        }
+                    , Input.button
+                        [ alignRight
+                        , mdl ["button", "js-button", "shadow--4dp",
+                            "button--fab", "button--colored", "button--primary"]
+                        -- NOTE(akavel): without height, stylish-elefants makes button disappear
+                        , height (px 56)
+                        , disabledWhen (String.trim name == "")
+                        ]
+                        { onPress = if (String.trim name == "")
+                            then Nothing
+                            else Just SaveChecklistName
+                        , label = icon "done"
+                        }
+                    ]
             ]
-            { onChange = Just EditChecklistName
+            { onChange = Just (\s -> EditChecklistName (Just s))
             , text = name
             , placeholder = Nothing
             , label = Input.labelLeft [] <| none
@@ -511,6 +552,13 @@ viewChecklistNameEditor name =
 nth : Int -> List a -> Maybe a
 nth n list =
     List.head <| List.drop n list
+
+
+capitalizeLeft : String -> String
+capitalizeLeft s =
+    (s |> String.left 1 |> String.toUpper)
+    ++
+    (s |> String.dropLeft 1)
 
 
 attrWhen : Bool -> Attribute msg -> Attribute msg
