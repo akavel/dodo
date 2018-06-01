@@ -25,6 +25,7 @@ type alias Model =
     , editedTaskText : String
     , editedTaskIdx : Int
     , verifyingTaskDeletion : Bool
+    , showingChecklistMenu : Bool
     }
 
 checklist : Focus { r | checklist : a } a
@@ -42,6 +43,7 @@ model =
     , editedTaskText = ""
     , editedTaskIdx = newTaskIdx
     , verifyingTaskDeletion = False
+    , showingChecklistMenu = False
     }
 
 
@@ -61,6 +63,7 @@ type Msg
     | SaveEdit
     | VerifyDeleteTask
     | DeleteTask Bool
+    | ShowChecklistMenu Bool
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -125,6 +128,8 @@ update msg model =
                     model |> stopEdit |> modifyNthTask model.editedTaskIdx
                         (\task -> Nothing)
             in ( newModel, PleaseSave )
+        ShowChecklistMenu show ->
+            ( { model | showingChecklistMenu = show }, Please Cmd.none )
 
 
 ---- SUBSCRIPTIONS ----
@@ -166,6 +171,10 @@ view model =
                         none
                     , viewFooter model
                     ]
+            -- -- Show Checklist-related menu as a modal dialog, if needed
+            , attrWhen model.showingChecklistMenu
+                <| inFront
+                <| viewChecklistMenuLayer model
             ]
             [ viewHeader model
             , column
@@ -194,7 +203,15 @@ viewHeader model =
             }
         -- TODO(akavel): if text overflows, somehow make it use smaller font +
         -- multiple rows; if even longer, trim right with "..."
-        , el [ centerX ] (text model.checklist.name)
+        , el
+            [ centerX
+            -- [ width fill
+            , Event.onClick (ShowChecklistMenu True)
+            -- , attrWhen (model.showingChecklistMenu)
+            --     <| below
+            --     <| viewChecklistMenu model
+            ]
+            ( text model.checklist.name )
         , Input.button
             [ alignRight ]
             { onPress = Just SwipeRight
@@ -394,6 +411,58 @@ viewEditActions model =
                 ]
 
 
+viewChecklistMenuLayer : Model -> Element Msg
+viewChecklistMenuLayer model =
+    let
+        -- filler is a fully transparent area, which is still clickable
+        -- (to dismiss the menu)
+        filler w h =
+            el
+                [ Background.color Color.gray
+                -- TODO(akavel): with fully 0 alpha, onClick doesn't work :(
+                , alpha 0.01
+                , width w
+                , height h
+                , Event.onClick (ShowChecklistMenu False)
+                ]
+                none
+    in column
+        [ height fill
+        , width fill
+        ]
+        [ filler fill (px 32)
+        , row
+            [ width fill ]
+            [ filler fill fill
+            -- The actual menu
+            , column
+                [ Background.color Color.white
+                , Font.color Color.black
+                , padding 8
+                , spacing 8
+                , Border.rounded 3
+                , mdl ["shadow--2dp"]
+                -- TODO(akavel): below don't work; how to make width wrap children when parent element has centerX ?
+                -- , width fill
+                -- , height fill
+                ]
+                [ row []
+                    -- TODO(akavel): why spacing doesn't do anything here? :/ fix this somehow
+                    -- [ spacing 8 ]
+                    [ icon "add" -- FIXME(akavel): appropriate icon
+                    , text "New list..."
+                    ]
+                , row []
+                    [ icon "edit"
+                    , text "Rename list..."
+                    ]
+                ]
+            , filler fill fill
+            ]
+        , filler fill fill
+        ]
+
+
 ---- UTILS ----
 
 
@@ -432,6 +501,7 @@ disabledWhen : Bool -> Attribute msg
 disabledWhen condition =
     attribute "disabled" "disabled"
     |> attrWhen condition
+
 
 mdl : List String -> Attribute msg
 mdl classSuffixes =
