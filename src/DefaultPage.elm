@@ -68,6 +68,7 @@ type Msg
     | ShowChecklistMenu Bool
     | EditChecklistName (Maybe String)
     | SaveChecklistName
+    | AddChecklist
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -76,6 +77,7 @@ type Plea
     | PleaseSave
     | PleaseSwipeLeft
     | PleaseSwipeRight
+    | PleaseAddChecklist
 
 
 update : Msg -> Model -> ( Model, Plea )
@@ -154,6 +156,8 @@ update msg model =
                 | checklist = newChecklist
                 , editedChecklistName = Nothing
                 }, PleaseSave )
+        AddChecklist ->
+            ( model, PleaseAddChecklist )
 
 
 ---- SUBSCRIPTIONS ----
@@ -476,9 +480,11 @@ viewChecklistMenuLayer checklistName =
                 -- , width fill
                 -- , height fill
                 ]
-                [ row []
+                [ row
+                    [ Event.onClick <| AddChecklist
                     -- TODO(akavel): why spacing doesn't do anything here? :/ fix this somehow
-                    -- [ spacing 8 ]
+                    -- , spacing 8
+                    ]
                     [ icon "add" -- FIXME(akavel): appropriate icon
                     , text "New list..."
                     ]

@@ -1,4 +1,4 @@
-module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll, scrollTo)
+module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll, scrollTo, addAfter)
 
 type Slit a =
     Slit
@@ -86,3 +86,13 @@ scrollTo idx slit =
         old = position slit
     in
         scroll (idx - old) slit
+
+addAfter : a -> Slit a -> Slit a
+addAfter a (Slit slit) =
+    Slit
+        -- NOTE: pre is reversed
+        { pre = slit.mid :: slit.pre
+        , mid = a
+        , post = slit.post
+        }
+

@@ -127,6 +127,9 @@ update msg model =
                         -- in the high level data.
                         , storage = newstorage
                     }
+                    |> if (pagemsg == DefaultPage.PleaseAddChecklist)
+                        then addChecklist
+                        else identity
                 newmsg =
                     case pagemsg of
                         DefaultPage.Please cmd ->
@@ -140,6 +143,11 @@ update msg model =
                             Cmd.none
                         DefaultPage.PleaseSwipeRight ->
                             Cmd.none
+                        DefaultPage.PleaseAddChecklist ->
+                            save
+                                { checklist = Nothing
+                                , v1 = Just (StorageV1.toJS newmodel.storage)
+                                }
             in
                 (newmodel, newmsg)
 
@@ -264,4 +272,45 @@ view model =
         OnListsPage submodel ->
             ListsPage.view submodel
             |> Html.map ListsPageMsg
+
+
+---- UTILS ----
+
+
+addChecklist : Model -> Model
+addChecklist model =
+    let
+        newModel =
+            { storage = newStorage
+            , currentPage = OnDefaultPage { emptyDefaultPage | checklist = newStorage |> Slit.peek }
+            }
+        newStorage =
+            model.storage
+            |> Slit.addAfter (StorageV1.Checklist newName [])
+        newName =
+            prefix ++ (toString (highest + 1))
+        prefix =
+            "New List "
+        highest =
+            model.storage
+            |> Slit.toList
+            |> fold -1 (\checklist highest ->
+                checklist.name
+                |> trimPrefix prefix
+                |> Result.andThen String.toInt
+                |> (\suffix -> case suffix of
+                    Ok n ->
+                        max n highest
+                    Err _ ->
+                        highest)
+                )
+                -- |> Result.map (max highest)
+                -- |> Result.withDefault highest
+        fold =
+            flip List.foldl
+        trimPrefix prefix s =
+            if String.startsWith prefix s
+            then Ok (s |> String.dropLeft (String.length prefix))
+            else Err ""
+    in newModel
 
