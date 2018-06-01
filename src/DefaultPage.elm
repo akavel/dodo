@@ -26,6 +26,7 @@ type alias Model =
     , editedTaskIdx : Int
     , verifyingTaskDeletion : Bool
     , showingChecklistMenu : Bool
+    , editedChecklistName : Maybe String
     }
 
 checklist : Focus { r | checklist : a } a
@@ -44,6 +45,7 @@ model =
     , editedTaskIdx = newTaskIdx
     , verifyingTaskDeletion = False
     , showingChecklistMenu = False
+    , editedChecklistName = Nothing
     }
 
 
@@ -64,6 +66,7 @@ type Msg
     | VerifyDeleteTask
     | DeleteTask Bool
     | ShowChecklistMenu Bool
+    | EditChecklistName String
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -130,6 +133,11 @@ update msg model =
             in ( newModel, PleaseSave )
         ShowChecklistMenu show ->
             ( { model | showingChecklistMenu = show }, Please Cmd.none )
+        EditChecklistName newName ->
+            ( { model
+                | editedChecklistName = Just newName
+                , showingChecklistMenu = False
+                }, Please Cmd.none )
 
 
 ---- SUBSCRIPTIONS ----
@@ -171,10 +179,16 @@ view model =
                         none
                     , viewFooter model
                     ]
-            -- -- Show Checklist-related menu as a modal dialog, if needed
+            -- Show Checklist-related menu as a modal dialog, if needed
             , attrWhen model.showingChecklistMenu
                 <| inFront
-                <| viewChecklistMenuLayer model
+                <| viewChecklistMenuLayer
+            -- Show modal dialog for editing Checklist name, if needed
+            , attrWhen (model.editedChecklistName /= Nothing)
+                <| inFront
+                <| viewChecklistNameEditor
+                <| Maybe.withDefault ""
+                <| model.editedChecklistName
             ]
             [ viewHeader model
             , column
@@ -411,8 +425,8 @@ viewEditActions model =
                 ]
 
 
-viewChecklistMenuLayer : Model -> Element Msg
-viewChecklistMenuLayer model =
+viewChecklistMenuLayer : Element Msg
+viewChecklistMenuLayer =
     let
         -- filler is a fully transparent area, which is still clickable
         -- (to dismiss the menu)
@@ -452,7 +466,9 @@ viewChecklistMenuLayer model =
                     [ icon "add" -- FIXME(akavel): appropriate icon
                     , text "New list..."
                     ]
-                , row []
+                , row
+                    [ Event.onClick (EditChecklistName model.checklist.name)
+                    ]
                     [ icon "edit"
                     , text "Rename list..."
                     ]
@@ -460,6 +476,32 @@ viewChecklistMenuLayer model =
             , filler fill fill
             ]
         , filler fill fill
+        ]
+
+
+viewChecklistNameEditor : String -> Element Msg
+viewChecklistNameEditor name =
+    column
+        [ width fill
+        , height fill
+        ]
+        [ Input.text
+            [ width fill
+            , mdl ["shadow--2dp", "color--primary", "color-text--primary-contrast"]
+            , height (px 40)
+            ]
+            { onChange = Just EditChecklistName
+            , text = name
+            , placeholder = Nothing
+            , label = Input.labelLeft [] <| none
+            }
+        , el
+            [ width fill
+            , height fill
+            , Background.color Color.gray
+            , alpha 0.75
+            ]
+            none
         ]
 
 
