@@ -70,6 +70,7 @@ type Plea
     | PleaseSwipeLeft
     | PleaseSwipeRight
 
+
 update : Msg -> Model -> ( Model, Plea )
 update msg model =
     case msg of
@@ -149,6 +150,7 @@ view model =
         column
             [ height fill
             , width fill
+            -- Show modal dialog for editing a task, if needed
             , attrWhen (model.editedTaskIdx /= newTaskIdx)
                 <| inFront
                 <| column
@@ -161,7 +163,7 @@ view model =
                         , height fill
                         , width fill
                         ]
-                        ( text "" )
+                        none
                     , viewFooter model
                     ]
             ]
@@ -248,8 +250,8 @@ viewFooter model =
             -- , placeholder = Just <| Input.placeholder [] <| text "Edit task"
             -- , label = Input.labelLeft [] <| text "Edit"
             -- , label = Input.labelAbove [] <| text "Edit task"
-            , label = Input.labelLeft [] <| text ""
-            -- , label = Input.labelAbove [] <| text ""
+            , label = Input.labelLeft [] <| none
+            -- , label = Input.labelAbove [] <| none
             }
     else
         row [ width fill ]
@@ -265,10 +267,10 @@ viewFooter model =
                     ]
                     -- <| text "..."
                     <| icon "create"
-                , label = Input.labelLeft [] <| text ""
+                , label = Input.labelLeft [] <| none
                 -- , label = Input.labelLeft [] <| text "New"
                 -- , label = Input.labelAbove [] <| text "New task"
-                -- , label = Input.labelAbove [] <| text ""
+                -- , label = Input.labelAbove [] <| none
                 }
             , Input.button
                 [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
@@ -335,7 +337,7 @@ viewEditActions model =
                             -- ]
                             [ Input.button
                                 [ Background.color Color.white
-                                , padding 10
+                                , padding 8
                                 , Border.rounded 3
                                 , mdl ["shadow--2dp"]
                                 ]
@@ -413,7 +415,7 @@ elemWhen : Bool -> Element msg -> Element msg
 elemWhen condition elem =
     if condition
     then elem
-    else text ""
+    else none
 
 
 attribute : String -> String -> Attribute msg
