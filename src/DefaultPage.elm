@@ -29,11 +29,14 @@ type alias Model =
     , editedChecklistName : Maybe String
     }
 
+
 checklist : Focus { r | checklist : a } a
 checklist = Focus.create .checklist (\f r -> { r | checklist = f r.checklist })
 
+
 tasks : Focus { r | tasks : a } a
 tasks = Focus.create .tasks (\f r -> { r | tasks = f r.tasks })
+
 
 model : Model
 model =
@@ -186,19 +189,15 @@ view model =
             -- Show modal dialog for editing a task, if needed
             , attrWhen (model.editedTaskIdx /= newTaskIdx)
                 <| inFront
-                <| column
-                    [ height fill
-                    , width fill
-                    ]
-                    [ el
-                        [ Background.color Color.gray
-                        , alpha 0.75
-                        , height fill
-                        , width fill
-                        ]
-                        none
-                    , viewFooter model
-                    ]
+                <| scrim
+                    { alpha = 0.75
+                    , onClick = Nothing
+                    , top = fill
+                    , right = (px 0)
+                    , bottom = (px 0)
+                    , left = (px 0)
+                    }
+                    <| viewFooter model
             -- Show Checklist-related menu as a modal dialog, if needed
             , attrWhen model.showingChecklistMenu
                 <| inFront
@@ -447,67 +446,53 @@ viewEditActions model =
 
 viewChecklistMenuLayer : String -> Element Msg
 viewChecklistMenuLayer checklistName =
-    let
-        -- filler is a fully transparent area, which is still clickable
-        -- (to dismiss the menu)
-        filler w h =
-            el
-                [ Background.color Color.gray
-                -- TODO(akavel): with fully 0 alpha, onClick doesn't work :(
-                , alpha 0.01
-                , width w
-                , height h
-                , Event.onClick (ShowChecklistMenu False)
-                ]
-                none
-    in column
-        [ height fill
-        , width fill
-        ]
-        [ filler fill (px 32)
-        , row
-            [ width fill ]
-            [ filler fill fill
-            -- The actual menu
-            , column
-                [ Background.color Color.white
-                , Font.color Color.black
-                , padding 8
-                , spacing 8
-                , Border.rounded 3
-                , mdl ["shadow--2dp"]
-                -- TODO(akavel): below don't work; how to make width wrap children when parent element has centerX ?
-                -- , width fill
-                -- , height fill
-                ]
-                [ row
-                    [ Event.onClick <| AddChecklist
-                    -- TODO(akavel): why spacing doesn't do anything here? :/ fix this somehow
-                    -- , spacing 8
-                    ]
-                    [ icon "add" -- FIXME(akavel): appropriate icon
-                    , text "New list..."
-                    ]
-                , row
-                    [ Event.onClick <| EditChecklistName <| Just checklistName
-                    ]
-                    [ icon "edit"
-                    , text "Rename list..."
-                    ]
-                ]
-            , filler fill fill
+    scrim
+        { alpha = 0.01
+        , onClick = Just (ShowChecklistMenu False)
+        , top = (px 32)
+        , right = fill
+        , bottom = fill
+        , left = fill
+        }
+        <| column
+            [ Background.color Color.white
+            , Font.color Color.black
+            , padding 8
+            , spacing 8
+            , Border.rounded 3
+            , mdl ["shadow--2dp"]
+            -- TODO(akavel): below don't work; how to make width wrap children when parent element has centerX ?
+            -- , width fill
+            -- , height fill
             ]
-        , filler fill fill
-        ]
+            [ row
+                [ Event.onClick <| AddChecklist
+                -- TODO(akavel): why spacing doesn't do anything here? :/ fix this somehow
+                -- , spacing 8
+                ]
+                [ icon "add" -- FIXME(akavel): appropriate icon
+                , text "New list..."
+                ]
+            , row
+                [ Event.onClick <| EditChecklistName <| Just checklistName
+                ]
+                [ icon "edit"
+                , text "Rename list..."
+                ]
+            ]
 
 
 viewChecklistNameEditor : String -> Element Msg
 viewChecklistNameEditor name =
-    column
-        [ width fill
-        , height fill
-        ]
-        [ Input.text
+    scrim
+        { alpha = 0.75
+        , onClick = Nothing
+        , top = (px 0)
+        , right = (px 0)
+        , bottom = fill
+        , left = (px 0)
+        }
+        <| Input.text
             [ width fill
             , mdl ["shadow--2dp", "color--primary", "color-text--primary-contrast"]
             , height (px 40)
@@ -542,14 +527,6 @@ viewChecklistNameEditor name =
             , placeholder = Nothing
             , label = Input.labelLeft [] <| none
             }
-        , el
-            [ width fill
-            , height fill
-            , Background.color Color.gray
-            , alpha 0.75
-            ]
-            none
-        ]
 
 
 ---- UTILS ----
@@ -637,4 +614,41 @@ modifyNthTask n modifier model =
             then (task |> modifier)
             else Just task
     in newModel
+
+
+-- scrim builds a partially transparent surrounding area around an element,
+-- which intercepts user clicks
+-- TODO(akavel): with fully 0 alpha, onClick doesn't seem to work :(
+type alias Scrim msg =
+    { alpha : Float
+    , onClick : Maybe msg
+    , top : Length
+    , right : Length
+    , bottom : Length
+    , left : Length
+    }
+scrim : Scrim msg -> Element msg -> Element msg
+scrim config contents =
+    let
+        stretcher w h =
+            el
+                [ Background.color Color.gray
+                , alpha config.alpha
+                , width w
+                , height h
+                , config.onClick
+                    |> Maybe.map (\msg -> Event.onClick msg)
+                    |> Maybe.withDefault (scale 1)
+                ]
+                none
+    in
+        column [ height fill, width fill ]
+            [ stretcher fill config.top
+            , row [ width fill ]
+                [ stretcher config.left fill
+                , contents
+                , stretcher config.right fill
+                ]
+            , stretcher fill config.bottom
+            ]
 
