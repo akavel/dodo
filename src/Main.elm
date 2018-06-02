@@ -58,10 +58,10 @@ We need to be able to:
 - *done!* edit an item on the list
 - *done!* save items on disk and load them on app start
 - *done!* show names of all lists
-- TODO: add new list
-- TODO: change the current list to a different one
+- *done!* add new list
+- *done!* change the current list to a different one
 - TODO: delete a list
-- TODO: rename current list
+- *done!* rename current list
 - TODO: copy (duplicate) a list with a new name
 - TODO: clear (hide) all disabled items
 - TODO: move items around the list
