@@ -597,6 +597,7 @@ stopEdit model =
     { model
         | editedTaskIdx = newTaskIdx
         , editedTaskText = ""
+        , verifyingTaskDeletion = False
         }
 
 
