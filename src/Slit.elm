@@ -1,4 +1,4 @@
-module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll, scrollTo, addAfter)
+module Slit exposing (Slit, fromElement, peek, poke, position, toList, fromList, scroll, scrollTo, addAfter, deleteWith)
 
 type Slit a =
     Slit
@@ -95,4 +95,27 @@ addAfter a (Slit slit) =
         , mid = a
         , post = slit.post
         }
+
+
+deleteWith : a -> Slit a -> Slit a
+deleteWith default (Slit slit) =
+    case (slit.pre, slit.mid, slit.post) of
+        (pre, _, next :: post) ->
+            Slit
+                { pre = pre
+                , mid = next
+                , post = post
+                }
+        (prev :: pre, _, []) ->
+            Slit
+                { pre = pre
+                , mid = prev
+                , post = []
+                }
+        ([], _, []) ->
+            Slit
+                { pre = []
+                , mid = default
+                , post = []
+                }
 

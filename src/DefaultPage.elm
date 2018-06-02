@@ -11,6 +11,7 @@ import Element.Border as Border
 import Element.Events as Event
 import Element.Font as Font
 import Element.Input as Input
+import Element.Region as Region
 -- evancz/focus — helpers for modifying nested fields in Model
 import Focus exposing (..)
 -- (internal modules)
@@ -27,6 +28,7 @@ type alias Model =
     , verifyingTaskDeletion : Bool
     , showingChecklistMenu : Bool
     , editedChecklistName : Maybe String
+    , verifyingChecklistDeletion : Bool
     }
 
 
@@ -49,6 +51,7 @@ model =
     , verifyingTaskDeletion = False
     , showingChecklistMenu = False
     , editedChecklistName = Nothing
+    , verifyingChecklistDeletion = False
     }
 
 
@@ -72,6 +75,8 @@ type Msg
     | EditChecklistName (Maybe String)
     | SaveChecklistName
     | AddChecklist
+    | VerifyDeleteChecklist
+    | DeleteChecklist Bool
 
 
 -- Plea is a request to parent view to execute the specified message
@@ -81,6 +86,7 @@ type Plea
     | PleaseSwipeLeft
     | PleaseSwipeRight
     | PleaseAddChecklist
+    | PleaseDeleteChecklist
 
 
 update : Msg -> Model -> ( Model, Plea )
@@ -161,6 +167,15 @@ update msg model =
                 }, PleaseSave )
         AddChecklist ->
             ( model, PleaseAddChecklist )
+        VerifyDeleteChecklist ->
+            ( { model
+                | verifyingChecklistDeletion = True
+                , showingChecklistMenu = False
+                }, Please Cmd.none )
+        DeleteChecklist confirm ->
+            ( { model | verifyingChecklistDeletion = False }
+            , if confirm then PleaseDeleteChecklist else Please Cmd.none
+            )
 
 
 ---- SUBSCRIPTIONS ----
@@ -208,6 +223,54 @@ view model =
                 <| viewChecklistNameEditor
                 <| Maybe.withDefault ""
                 <| model.editedChecklistName
+            -- Show modal dialog for deleting Checklist, if needed
+            , attrWhen model.verifyingChecklistDeletion
+                <| inFront
+                <| scrim
+                    { alpha = 0.75
+                    , onClick = Just (DeleteChecklist False)
+                    , top = fill
+                    , right = fill
+                    , bottom = fill
+                    , left = fill
+                    }
+                <| column
+                    [ height fill
+                    , width fill
+                    -- , Background.color Color.white
+                    , Border.rounded 6
+                    , padding 16
+                    , spacing 16
+                    , mdl ["shadow--8dp"]
+                    ]
+                    [ el
+                        [ Region.heading 4
+                        , width fill
+                        , Font.bold
+                        -- , mdl ["dialog__title"]
+                        ]
+                        ( text "Delete checklist?" )
+                    , row
+                        [ width fill
+                        -- , mdl ["dialog__actions"]
+                        , spacing 16
+                        ]
+                        [ Input.button
+                            [ mdl ["button", "js-button", "button--primary"]
+                            , width fill
+                            ]
+                            { onPress = Just (DeleteChecklist True)
+                            , label = text "Delete"
+                            }
+                        , Input.button
+                            [ mdl ["button", "js-button", "button--primary"]
+                            , width fill
+                            ]
+                            { onPress = Just (DeleteChecklist False)
+                            , label = text "Cancel"
+                            }
+                        ]
+                    ]
             ]
             [ viewHeader model
             , column
@@ -478,6 +541,13 @@ viewChecklistMenuLayer checklistName =
                 ]
                 [ icon "edit"
                 , text "Rename list..."
+                ]
+            -- TODO(akavel): add menu separator here
+            , row
+                [ Event.onClick <| VerifyDeleteChecklist
+                ]
+                [ icon "delete"
+                , text "Delete list..."
                 ]
             ]
 

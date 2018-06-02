@@ -127,9 +127,13 @@ update msg model =
                         -- in the high level data.
                         , storage = newstorage
                     }
-                    |> if (pagemsg == DefaultPage.PleaseAddChecklist)
-                        then addChecklist
-                        else identity
+                    |> case pagemsg of
+                        DefaultPage.PleaseAddChecklist ->
+                            addChecklist
+                        DefaultPage.PleaseDeleteChecklist ->
+                            deleteChecklist
+                        _ ->
+                            identity
                 newmsg =
                     case pagemsg of
                         DefaultPage.Please cmd ->
@@ -144,6 +148,11 @@ update msg model =
                         DefaultPage.PleaseSwipeRight ->
                             Cmd.none
                         DefaultPage.PleaseAddChecklist ->
+                            save
+                                { checklist = Nothing
+                                , v1 = Just (StorageV1.toJS newmodel.storage)
+                                }
+                        DefaultPage.PleaseDeleteChecklist ->
                             save
                                 { checklist = Nothing
                                 , v1 = Just (StorageV1.toJS newmodel.storage)
@@ -313,4 +322,15 @@ addChecklist model =
             then Ok (s |> String.dropLeft (String.length prefix))
             else Err ""
     in newModel
+
+
+deleteChecklist : Model -> Model
+deleteChecklist model =
+    let
+        newstorage =
+            model.storage |> Slit.deleteWith emptyDefaultPage.checklist
+    in { model
+        | storage = newstorage
+        , currentPage = OnDefaultPage { emptyDefaultPage | checklist = Slit.peek newstorage }
+        }
 
