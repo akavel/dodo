@@ -205,7 +205,7 @@ view model =
             , attrWhen (model.editedTaskIdx /= newTaskIdx)
                 <| inFront
                 <| scrim
-                    { alpha = 0.75
+                    { alpha = grayedOutAlpha
                     , onClick = Nothing
                     , top = fill
                     , right = (px 0)
@@ -227,7 +227,7 @@ view model =
             , attrWhen model.verifyingChecklistDeletion
                 <| inFront
                 <| scrim
-                    { alpha = 0.75
+                    { alpha = grayedOutAlpha
                     , onClick = Just (DeleteChecklist False)
                     , top = fill
                     , right = fill
@@ -281,7 +281,8 @@ view model =
                 , padding 20
                 ]
                 (List.indexedMap viewTask model.checklist.tasks)
-            , viewFooter model
+            , elemWhen (model.editedTaskIdx == newTaskIdx)
+                <| viewFooter model
             ]
 
 
@@ -355,35 +356,28 @@ viewFooter : Model -> Element Msg
 viewFooter model =
     if model.editedTaskIdx /= newTaskIdx
     then
-        Input.text
-            [ above (viewEditActions model) ]
-            { onChange = Just EditTaskText
-            , text = model.editedTaskText
-            , placeholder = Nothing
-            -- , placeholder = Just <| Input.placeholder [] <| text "Edit task"
-            -- , label = Input.labelLeft [] <| text "Edit"
-            -- , label = Input.labelAbove [] <| text "Edit task"
-            , label = Input.labelLeft [] <| none
-            -- , label = Input.labelAbove [] <| none
-            }
+        column []
+            [ viewEditActions model
+            , Input.text []
+                { onChange = Just EditTaskText
+                , text = model.editedTaskText
+                , placeholder = Nothing
+                , label = Input.labelLeft [] <| none
+                }
+            ]
     else
         row [ width fill ]
             [ Input.text
                 [ width fill ]
                 { onChange = Just EditTaskText
                 , text = model.editedTaskText
-                -- , placeholder = Nothing
                 , placeholder = Just <| Input.placeholder
                     [ Font.color Color.gray
                     , Font.alignLeft
                     , Font.italic
                     ]
-                    -- <| text "..."
                     <| icon "create"
                 , label = Input.labelLeft [] <| none
-                -- , label = Input.labelLeft [] <| text "New"
-                -- , label = Input.labelAbove [] <| text "New task"
-                -- , label = Input.labelAbove [] <| none
                 }
             , Input.button
                 [ mdl ["button", "js-button", "button--fab", "button--colored", "js-ripple-effect"]
@@ -425,6 +419,11 @@ viewEditActions model =
         then
             row
                 [ width fill
+                , Background.color Color.gray
+                , alpha grayedOutAlpha
+                -- , Event.onClick Nothing
+                    -- |> Maybe.map (\msg -> Event.onClick msg)
+                    -- |> Maybe.withDefault (scale 1)
                 ]
                 [ Input.button
                     [ alignLeft
@@ -484,6 +483,8 @@ viewEditActions model =
         else
             row
                 [ width fill
+                , Background.color Color.gray
+                , alpha grayedOutAlpha
                 ]
                 [ Input.button
                     [ alignLeft
@@ -555,7 +556,7 @@ viewChecklistMenuLayer checklistName =
 viewChecklistNameEditor : String -> Element Msg
 viewChecklistNameEditor name =
     scrim
-        { alpha = 0.75
+        { alpha = grayedOutAlpha
         , onClick = Nothing
         , top = (px 0)
         , right = (px 0)
@@ -597,6 +598,12 @@ viewChecklistNameEditor name =
             , placeholder = Nothing
             , label = Input.labelLeft [] <| none
             }
+
+
+---- STYLES ----
+
+
+grayedOutAlpha = 0.75
 
 
 ---- UTILS ----
