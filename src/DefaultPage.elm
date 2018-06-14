@@ -2,7 +2,10 @@ module DefaultPage exposing (..)
 
 import Html exposing (Html)
 import Html.Attributes
+import Html.Events
 import String
+import Json.Decode
+import Debug
 -- mdgriffith/stylish-elephants — easier building of HTML+CSS layouts
 import Color exposing (..)
 import Element exposing (..)
@@ -25,7 +28,7 @@ type alias Model =
     { checklist : StorageV1.Checklist
     , editedTaskText : String
     , editedTaskIdx : Int
-    , verifyingTaskDeletion : Bool
+    , askingTaskDeletion : Bool
     , showingChecklistMenu : Bool
     , editedChecklistName : Maybe String
     , verifyingChecklistDeletion : Bool
@@ -48,7 +51,7 @@ model =
         ]
     , editedTaskText = ""
     , editedTaskIdx = newTaskIdx
-    , verifyingTaskDeletion = False
+    , askingTaskDeletion = False
     , showingChecklistMenu = False
     , editedChecklistName = Nothing
     , verifyingChecklistDeletion = False
@@ -69,8 +72,8 @@ type Msg
     | CancelEdit
     | ToggleTask
     | SaveEdit
-    | VerifyDeleteTask
-    | DeleteTask Bool
+    | AskDeleteTask Bool
+    | DeleteTask
     | ShowChecklistMenu Bool
     | EditChecklistName (Maybe String)
     | SaveChecklistName
@@ -129,11 +132,9 @@ update msg model =
                         model |> stopEdit |> modifyNthTask model.editedTaskIdx
                             (\task -> Just { task | text = newText })
             in ( newModel, PleaseSave )
-        VerifyDeleteTask ->
-            ( { model | verifyingTaskDeletion = True }, Please Cmd.none )
-        DeleteTask False ->
-            ( model |> stopEdit, Please Cmd.none )
-        DeleteTask True ->
+        AskDeleteTask ask ->
+            ( { model | askingTaskDeletion = Debug.log "askingTaskDeletion:" ask }, Please Cmd.none )
+        DeleteTask ->
             let
                 newModel =
                     model |> stopEdit |> modifyNthTask model.editedTaskIdx
@@ -206,7 +207,7 @@ view model =
                 <| inFront
                 <| scrim
                     { alpha = grayedOutAlpha
-                    , onClick = Nothing
+                    , onClick = Just (AskDeleteTask False)
                     , top = fill
                     , right = (px 0)
                     , bottom = (px 0)
@@ -421,25 +422,25 @@ viewEditActions model =
                 [ width fill
                 , Background.color Color.gray
                 , alpha grayedOutAlpha
-                -- , Event.onClick Nothing
-                    -- |> Maybe.map (\msg -> Event.onClick msg)
-                    -- |> Maybe.withDefault (scale 1)
+                , Event.onClick (AskDeleteTask False)
                 ]
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
                     , Background.color <| Color.rgb 200 200 200
+                    -- , alpha 1
+                    -- , attribute "style" "background: rgba(200, 200, 200, 1)"
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
                     }
-                , Input.button
+                , el
                     [ centerX
                     -- , mdl ["button", "js-button", "button--mini-fab"]
                     -- TODO(akavel): allow quitting the menu by pressing
                     -- outside of it, or just display a regular yes/no
                     -- modal dialog window instead.
-                    , attrWhen model.verifyingTaskDeletion
+                    , attrWhen model.askingTaskDeletion
                         <| above
                         <| column []
                             -- [ Background.color Color.white
@@ -453,7 +454,7 @@ viewEditActions model =
                                 , Border.rounded 3
                                 , mdl ["shadow--2dp"]
                                 ]
-                                { onPress = Just (DeleteTask True)
+                                { onPress = Just DeleteTask
                                 -- , label = text "Delete task?"
                                 , label = row []
                                     [ icon "delete_forever"
@@ -461,10 +462,10 @@ viewEditActions model =
                                     ]
                                 }
                             ]
+                    , onClickNoBubble (AskDeleteTask True)
+                    , pointer
                     ]
-                    { onPress = Just VerifyDeleteTask
-                    , label = icon "delete"
-                    }
+                    (icon "delete")
                 , Input.button
                     [ alignRight
                     , mdl ["button", "js-button", "shadow--4dp",
@@ -485,11 +486,13 @@ viewEditActions model =
                 [ width fill
                 , Background.color Color.gray
                 , alpha grayedOutAlpha
+                , Event.onClick (AskDeleteTask False)
                 ]
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
                     , Background.color <| Color.rgb 200 200 200
+                    -- , alpha 1
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
@@ -653,6 +656,17 @@ disabledWhen condition =
     |> attrWhen condition
 
 
+-- NOTE: code from mdgriffith (https://github.com/mdgriffith/stylish-elephants/issues/90#issuecomment-395070073)
+onClickNoBubble : msg -> Attribute msg
+onClickNoBubble msg =
+    htmlAttribute
+    <| Html.Events.onWithOptions "click"
+        { stopPropagation = True
+        , preventDefault = False
+        }
+    <| Json.Decode.succeed msg
+
+
 mdl : List String -> Attribute msg
 mdl classSuffixes =
     classSuffixes
@@ -674,7 +688,7 @@ stopEdit model =
     { model
         | editedTaskIdx = newTaskIdx
         , editedTaskText = ""
-        , verifyingTaskDeletion = False
+        , askingTaskDeletion = False
         }
 
 
