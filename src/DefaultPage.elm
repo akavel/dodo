@@ -420,16 +420,15 @@ viewEditActions model =
         then
             row
                 [ width fill
-                , Background.color Color.gray
-                , alpha grayedOutAlpha
+                , Background.color
+                    <| withAlpha grayedOutAlpha
+                    <| Color.gray
                 , Event.onClick (AskDeleteTask False)
                 ]
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
                     , Background.color <| Color.rgb 200 200 200
-                    -- , alpha 1
-                    -- , attribute "style" "background: rgba(200, 200, 200, 1)"
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
@@ -484,15 +483,15 @@ viewEditActions model =
         else
             row
                 [ width fill
-                , Background.color Color.gray
-                , alpha grayedOutAlpha
+                , Background.color
+                    <| withAlpha grayedOutAlpha
+                    <| Color.gray
                 , Event.onClick (AskDeleteTask False)
                 ]
                 [ Input.button
                     [ alignLeft
                     , mdl ["button", "js-button", "button--fab"]
                     , Background.color <| Color.rgb 200 200 200
-                    -- , alpha 1
                     ]
                     { onPress = Just CancelEdit
                     , label = icon "close"
@@ -622,6 +621,14 @@ capitalizeLeft s =
     (s |> String.left 1 |> String.toUpper)
     ++
     (s |> String.dropLeft 1)
+
+
+withAlpha : Float -> Color -> Color
+withAlpha alpha color =
+    let
+        c = Color.toRgb color
+    in
+        Color.rgba c.red c.green c.blue alpha
 
 
 attrWhen : Bool -> Attribute msg -> Attribute msg
