@@ -282,8 +282,16 @@ view model =
                 , padding 20
                 ]
                 (List.indexedMap viewTask model.checklist.tasks)
-            , elemWhen (model.editedTaskIdx == newTaskIdx)
-                <| viewFooter model
+            , if (model.editedTaskIdx == newTaskIdx)
+                then viewFooter model
+                -- Dummy element to fill the same height as footer would have,
+                -- so that task items don't move when we start editing a task.
+                -- Alternatively, could maybe use fake: viewFooter { model | editedTaskIdx = newTaskIdx }
+                else el
+                    [ height (px 56)
+                    , width fill
+                    ]
+                    none
             ]
 
 
@@ -435,18 +443,9 @@ viewEditActions model =
                     }
                 , el
                     [ centerX
-                    -- , mdl ["button", "js-button", "button--mini-fab"]
-                    -- TODO(akavel): allow quitting the menu by pressing
-                    -- outside of it, or just display a regular yes/no
-                    -- modal dialog window instead.
                     , attrWhen model.askingTaskDeletion
                         <| above
                         <| column []
-                            -- [ Background.color Color.white
-                            -- , padding 10
-                            -- , width shrink
-                            -- , height shrink
-                            -- ]
                             [ Input.button
                                 [ Background.color Color.white
                                 , padding 8
@@ -454,7 +453,6 @@ viewEditActions model =
                                 , mdl ["shadow--2dp"]
                                 ]
                                 { onPress = Just DeleteTask
-                                -- , label = text "Delete task?"
                                 , label = row []
                                     [ icon "delete_forever"
                                     , text "Delete task?"
